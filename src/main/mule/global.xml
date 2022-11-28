@@ -32,7 +32,7 @@ http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/m
 	</secure-properties:config>
 	
     <!-- This is the configuration to let this mule app talk to API Manager's corresponding API, replace flow reference with ${artificatID}-main according to app name -->
-    <api-gateway:autodiscovery  apiId="${api.id}" doc:name="API Autodiscovery" doc:id="64e53ea9-8f3d-4165-8451-fc9e075835f3" flowRef="ar-op10-process-api-main" ignoreBasePath="true"/>
+    <!--api-gateway:autodiscovery  apiId="${api.id}" doc:name="API Autodiscovery" doc:id="64e53ea9-8f3d-4165-8451-fc9e075835f3" flowRef="ar-op10-process-api-main" ignoreBasePath="true"/-->
 
     <!-- Listener references "env" specific properties -->
 	<http:listener-config name="httpListenerConfigArOp10ProcessApi" doc:name="HTTP Listener config Main" doc:id="110e7948-6f84-4387-937e-2728db55929e" >
