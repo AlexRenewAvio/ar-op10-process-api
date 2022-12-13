@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	 xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger" xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+      xmlns:http="http://www.mulesoft.org/schema/mule/http"
+      xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:avio-core="http://www.mulesoft.org/schema/mule/avio-core" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd http://www.mulesoft.org/schema/mule/avio-core http://www.mulesoft.org/schema/mule/avio-core/current/mule-avio-core.xsd       
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+
+    <!-- AVIO Mule Logger configuration -->
+
+    <!-- This is the Configuration to make mule always refer to globalErrorHandler defined in error-handling.xml for handling exceptions -->
+    <configuration defaultErrorHandler-ref="globalErrorHandler"/>
+
+    <!-- This Property is to use in AVIO custom logger to log the current mule application version. Change this everytime when you decided to change this application version in POM. -->
+    <global-property doc:name="Global Property" doc:id="17770a11-4157-4172-973b-72174cc545ad" name="pomVersion" value="1.0.0" />
+
+    <!-- This Property is to use in various properties and Custom Logger to reference the environment (e.g. local, dev, etc) -->
+	<global-property doc:name="Global Property" doc:id="a1fa49c4-d27a-47ab-bd5e-20d5f55721f5" name="mule.env" value="dev" />
+
+    <!-- This is the configuration to refer and encrypt properties in properties file. -->
+    <secure-properties:config name="securePropertiesConfig" doc:name="Secure Properties Config" doc:id="d64f0a63-454a-486c-be29-1fcdc9534db5" file="secure/properties/${mule.env}-secure.properties" key="${mule.key}" >
+    	<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+
+ 	<!-- This is the configuration to refer and encrypt properties in common properties file. -->
+    <secure-properties:config name="securePropertiesConfigCommon" doc:name="Secure Properties Config" doc:id="b19fa7a9-dcf7-4927-afcf-327d439c435e" file="secure/properties/common-secure.properties" key="${mule.key}" >
+    	<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	
+    <!-- This is the configuration to let this mule app talk to API Manager's corresponding API, replace flow reference with ${artificatID}-main according to app name -->
+    <!--  api-gateway:autodiscovery  apiId="${api.id}" doc:name="API Autodiscovery" doc:id="64e53ea9-8f3d-4165-8451-fc9e075835f3" flowRef="ar-op10-process-api-main" ignoreBasePath="true"/-->
+
+    <!-- Listener references "env" specific properties -->
+	<http:listener-config name="httpListenerConfigArOp10ProcessApi" doc:name="HTTP Listener config Main" doc:id="110e7948-6f84-4387-937e-2728db55929e" >
+		<http:listener-connection host="${https.host}" port="${https.port}" protocol="HTTPS" tlsContext="tlsContextListener"/>
+	</http:listener-config>
+
+	<tls:context name="tlsContextListener" doc:name="TLS Context" doc:id="9fe9b8b6-7ea8-4828-9a4e-673d9e767f65" >
+		<tls:key-store type="${tls.keystore.type}" path="${tls.keystore.path}" alias="reyes-coke" keyPassword="${secure::tls.keystore.password}" password="${secure::tls.keystore.key.password}"/>
+	</tls:context>
+	
+	<!-- This is an Import of Health check API flows -->	
+	<!-- import doc:name="Import" file="health-check-api.xml"/-->
+	
+	<!-- This is the configuration to refer properties in properties file. -->
+	<configuration-properties doc:name="Configuration properties"  doc:id="a2fb73ae-d81d-47da-9dbe-b76cabf6c375" file="properties/${mule.env}.properties" />
+	
+	<!-- This is the configuration to refer properties in common properties file. -->
+	<configuration-properties doc:name="Configuration properties" doc:id="26d08129-8b75-4e05-8f35-27aac9aa57e7" file="properties/common.properties" />
+	<avio-logger:config name="avioCoreConfig" doc:name="AVIO Logger Config" doc:id="4a0277d2-d415-4244-834c-19aac5cf322c" applicationName="${api.name}" applicationVersion="${api.version}" environment="#[p('mule.env')]" defaultCategory="com.alexrenew.api" enableV1Compatibility="true" />
+
+	<db:config name="databaseConfig" doc:name="Database Config" doc:id="47d363d0-4b51-4752-b6f8-e4ee9c7b0e93" >
+		<db:mssql-connection host="WINCC-SQL-PROXY" port="1434" user="avio-agent" password="S#VZv9QeITA*05x4lFW7" instanceName="MSSQLSERVER" databaseName="ASA"/>
+	</db:config>
+	<os:object-store name="dateWatermark" doc:name="Object store" doc:id="0820da07-2de6-4ea8-b493-ecaa25d6e10b" persistent="false" entryTtl="30" entryTtlUnit="MINUTES" expirationInterval="10" />
+
+</mule>

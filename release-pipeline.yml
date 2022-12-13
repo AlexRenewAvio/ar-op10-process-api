@@ -1,0 +1,42 @@
+jobs:
+  - deployment: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: ${{ parameters.environment }}
+    variables:
+      appArtifactId: ${{ parameters.appArtifactId }}
+      appGroupId: ${{ parameters.appGroupId }}
+      appVersion: ${{ parameters.appVersion }}
+      environment: ${{ parameters.environment }}      
+    strategy:
+      runOnce:
+        deploy:
+              steps:
+                - task: DownloadSecureFile@1
+                  name: mavenSettings
+                  inputs:
+                    secureFile: 'mavenSettings.xml' 
+                - task: PowerShell@2
+                  displayName: 'Update Build Number'
+                  inputs:
+                    targetType: inline
+                    script: |
+                       echo "##vso[build.updatebuildnumber]$(appVersion)_$(environment)"
+                - task: CopyFiles@2
+                  displayName: 'Retrieve Artifact: Copy Jar to: $(build.artifactstagingdirectory)'
+                  inputs:
+                    SourceFolder: '$(Pipeline.Workspace)/drop/target'
+                    Contents: '*.jar'
+                    TargetFolder: '$(System.DefaultWorkingDirectory)'
+                - task: CopyFiles@2
+                  displayName: 'Retrieve Artifact: Copy Pom to: $(build.artifactstagingdirectory)'
+                  inputs:
+                    SourceFolder: '$(Pipeline.Workspace)/drop'
+                    Contents: 'pom.xml'
+                    TargetFolder: '$(System.DefaultWorkingDirectory)' 
+                - task: Maven@3
+                  displayName: 'Deploy'
+                  inputs:
+                    workingDirectory: $(System.DefaultWorkingDirectory)/
+                    goals: '-s $(mavenSettings.secureFilePath) -e -Denvironment=$(environment) -Dregion=$(region) -DapplicationName=$(appArtifactId)-$(environment) -DworkerType=$(workerType) -Dmule.key=$(mule.key) -Dmule.env=$(mule.env) -Dworkers=$(workers) -Dnexus.username=$(nexusUsername) -Dnexus.password=$(nexusPassword) -DconnectedApp.clientId=$(connectedApp.clientId) -DconnectedApp.clientSecret=$(connectedApp.clientSecret) -DconnectedApp.grantType=$(connectedApp.grantType) -Danypoint.clientId=$(anypoint.clientId) -Danypoint.clientSecret=$(anypoint.clientSecret) -Dhttps.private.port=$(https.private.port) -Danypoint.businessGroupId=$(businessGroupId) -Dmule.artifact=$(appArtifactId)-$(appVersion)-mule-application.jar mule:deploy'
+                    options: $(MAVEN_COMMON_OPTIONS) 
