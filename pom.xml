@@ -141,12 +141,12 @@
 			<version>1.0.2</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
-		<!-- dependency>
+		<dependency>
 			<groupId>5bdbaced-b1a3-4f07-ac77-8445d7296f32</groupId>
 			<artifactId>health-check-api</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 			<classifier>mule-plugin</classifier>
-		</dependency-->
+		</dependency>
 		<dependency>
 			<groupId>com.mulesoft.munit</groupId>
 			<artifactId>munit-runner</artifactId>
@@ -182,12 +182,6 @@
 			<groupId>org.mule.connectors</groupId>
 			<artifactId>mule-objectstore-connector</artifactId>
 			<version>1.2.1</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.mule.connectors</groupId>
-			<artifactId>mule-file-connector</artifactId>
-			<version>1.4.0</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 		<dependency>
