@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="
+<mule xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd">
 	
 	<flow name="op10-scheduler" doc:id="59b4138a-19ba-4fc9-b279-2e916c4e28a9" >
 		<scheduler doc:name="Trigger at 2 AM Everyday" doc:id="7fb6868d-1eec-4fde-acb4-59593b8f4cbe" >
 			<scheduling-strategy >
-				<fixed-frequency frequency="15" timeUnit="MINUTES"/>
-			</scheduling-strategy>
+				<cron expression="${scheduler.cron}"/>
+			
+</scheduling-strategy>
 		</scheduler>
-		<logger level="INFO" doc:name="Start" doc:id="1a063941-4307-443a-a475-b7b1f8845a8e" message="START"/>
+		<avio-logger:log doc:name="START" doc:id="ebf0fe41-2f6d-4d44-b405-f7ae9c828faa" config-ref="avioCoreConfig" message="Application Scheduler Started">
+			<avio-logger:message-attributes />
+		</avio-logger:log>
 		<flow-ref doc:name="op10-processing-impl" doc:id="39edbff6-5516-4242-b426-44499703a600" name="op10-processing-impl"/>
-		<logger level="INFO" doc:name="End" doc:id="34c20f1f-1707-4fba-a410-67b07395fc4d" message="END"/>
-	</flow>
+		<avio-logger:log doc:name="END" doc:id="a3644968-ffd6-4ea7-81fe-d6cb3ac2fbce" config-ref="avioCoreConfig" message="Application Scheduler Ended" >
+			<avio-logger:message-attributes />
+		</avio-logger:log>
+	
+</flow>
 	
 	</mule>

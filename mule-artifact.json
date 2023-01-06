@@ -1,7 +1,8 @@
 {
 	"minMuleVersion": "4.4.0",
 	"secureProperties": [
-		"anypoint.clientSecret",
+		"anypoint.platform.client_secret",
+		"mule.key",
 		"tls.keystore.password",
 		"tls.keystore.key.password"
 	]

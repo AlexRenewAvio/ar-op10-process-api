@@ -1,310 +1,255 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
-	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+<mule xmlns:smb="http://www.mulesoft.org/schema/mule/smb"
+	xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
-http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
-	<file:config name="File_Config" doc:name="File Config" doc:id="aa7a3b8f-9057-49b9-8651-e56dd6dc06dc" >
-		<file:connection workingDir="C:\Users\manoj.amballa\Documents\Manoj-Files" />
-	</file:config>
-	<flow name="set-dates" doc:id="f2e29e64-4501-4292-b803-57c9d6455585">
-		<os:retrieve doc:name="setUpdateFrom" doc:id="0839e6e1-dbe7-46e3-8444-ec75a6c895f3" objectStore="dateWatermark" key="updateFrom" target="updateFrom" targetValue="#[output application/json --- payload]">
-			<os:default-value><![CDATA[#[//((now() >> "EST") as Date) - |P1D|
-"2022-10-20"]]]></os:default-value>
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd
+http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/current/mule-smb.xsd">
+	<flow name="op10-processing-impl" doc:id="898dd829-1f03-47c5-a388-fd8c93ebef48">
+		<avio-logger:log doc:name="START" doc:id="1205e2a4-0dec-4cd4-bdfb-6fe8ba952551" config-ref="avioCoreConfig" message="Start of op10 file creation" />
+		<flow-ref doc:name="set-dates" doc:id="c3576891-a3bd-4396-87c6-458a3e86677a" name="set-dates" />
+		<flow-ref doc:name="extract-and-sort-tables" doc:id="a5d8667e-bbb0-4016-afa6-0050c19143ca" name="extract-and-sort-tables" />
+		<flow-ref doc:name="extract-min-max-avg-records" doc:id="e4dafe46-4730-4d55-9866-c1289bfce681" name="extract-min-max-avg-records" />
+		<flow-ref doc:name="extract-total-records" doc:id="3127d1f7-8a6e-4773-885e-0f048de61598" name="extract-total-records" />
+		<flow-ref doc:name="op10-file-format" doc:id="b7919153-782d-4cbf-8d03-3cae3b844691" name="op10-file-format" />
+		<flow-ref doc:name="smb-connections" doc:id="821172ec-8305-42b7-86a0-56fe57c083f8" name="smb-connections" />
+		<flow-ref doc:name="op10-error-list" doc:id="157e2b07-7524-4779-b911-9bde05977ed2" name="op10-error-list" />
+		<avio-logger:log doc:name="END" doc:id="44b4cbc9-e283-4fd4-bc01-fed212ebf0a5" config-ref="avioCoreConfig" message="End of op10 file creation" />
+		<error-handler ref="globalErrorHandler" />
+	
+</flow>
+	<sub-flow name="set-dates" doc:id="f2e29e64-4501-4292-b803-57c9d6455585">
+		<avio-logger:log doc:name="START" doc:id="fbcf2e0e-dc76-4133-81d2-3c5637d77783" config-ref="avioCoreConfig" message="Retriving TimeStamps Started"/>
+		<os:retrieve doc:name="Set updateFrom" doc:id="0839e6e1-dbe7-46e3-8444-ec75a6c895f3" objectStore="dateWatermark" key="updateFrom" target="updateFrom" targetValue="#[output application/json --- payload]">
+			<os:default-value><![CDATA[#[((now() >> "EST") as Date) - |P1D|
+//"2022-10-17"]]]></os:default-value>
 		</os:retrieve>
-		<os:retrieve doc:name="setUpdateTo" doc:id="f68e1c2c-dfe3-4fe1-aff4-8a164cd7eeab" objectStore="dateWatermark" key="updateTo" target="updateTo" targetValue="#[output application/json --- payload]">
-			<os:default-value><![CDATA[#[//(now() >> "EST") as Date
-"2022-10-21"]]]></os:default-value>
+		<os:retrieve doc:name="Set updateTo" doc:id="f68e1c2c-dfe3-4fe1-aff4-8a164cd7eeab" objectStore="dateWatermark" key="updateTo" target="updateTo" targetValue="#[output application/json --- payload]">
+			<os:default-value><![CDATA[#[(now() >> "EST") as Date
+//"2022-10-18"]]]></os:default-value>
 		</os:retrieve>
-	</flow>
-	<flow name="extract-total-records" doc:id="7153c652-ad89-422d-aa9d-421648aa0909" >
-		<parallel-foreach doc:name="Parallel For Each" doc:id="22b11aa6-91db-413d-8ee0-5f330f98d903" collection="#[vars.listOfTotalQueries]">
-			<logger level="INFO" doc:name="INFO" doc:id="27c3cc20-2cec-489d-939d-ea1f7aff941f" message='#["Constructing Query for Table: " ++ payload.tableName default "Error: Table Not found"]' />
-			<set-variable value="#[payload.tableName]" doc:name="Set TableName" doc:id="16b485e5-2282-4a61-a067-15a316ccf6c9" variableName="tableName" />
-			<ee:transform doc:name="ConstructQuery" doc:id="d2177698-5c86-4544-8ed7-07e2d6ec92a3">
-				<ee:message>
-					<ee:set-payload><![CDATA[%dw 2.0
-
-var split = payload.tableValues splitBy ","
-
-var queryPrefix = "Select TIMESTAMP,"
-
-var QueryFrom = " from dbo."
-
-fun matrix(value, col, table) =
-  value match {
-    case "Total" -> ("(" ++ col ++ ")")
-  }
-  
-var queryColumns = ((vars.configDataTotal filter (split contains $."SCADA Tag") map (matrix($."Query Type" ,$."SCADA Tag", $."SCADA Table") ++ (" " ++ $."SCADA Tag" ++ "__" ++ $."SCADA Column"))) joinBy ",")
-
-var querySuffix = QueryFrom ++ vars.tableName ++ " where Timestamp >= " ++ "'" ++ vars.updateFrom ++ "'" ++ " and Timestamp < " ++ "'" ++  vars.updateTo ++ " " ++ "01:30:00" ++ "'" ++ " order by TIMESTAMP"
-
-output application/json  
----
-
-queryPrefix ++ queryColumns ++ querySuffix
-]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			<logger level="INFO" doc:name="Logger" doc:id="85cdaf3c-cd26-4b23-9987-f6be1aa93007" message="#[payload]" />
-			<db:select doc:name="Extract Data from DB" doc:id="b22642b1-e088-4332-87c1-01d3f90b5a57" config-ref="databaseConfig">
+		<avio-logger:log doc:name="END" doc:id="e375f21f-f3ac-490c-bbab-ab69f57213c2" config-ref="avioCoreConfig" message="Retriving TimeStamps Completed" payload='#[write({updateFrom: vars.updateFrom,updateTo: vars.updateTo}, "application/json")]'/>
+	</sub-flow>
+	<sub-flow name="extract-and-sort-tables" doc:id="43e4b6ae-48b8-452a-8408-b589c3feb604">
+		<ee:transform doc:name="Extract Config File Data" doc:id="a9bb67ca-d638-4a17-98a8-7ddeafc33d5b">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable resource="dataweave/config-file.dwl" variableName="configData" />
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Split Total Query Type with Others" doc:id="c9bdf340-e704-4c36-a486-e2d07342cc84">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable resource="dataweave/config-file-with-MinMaxAvg.dwl" variableName="configDataMinMaxAvg" />
+				<ee:set-variable resource="dataweave/config-file-with-Total.dwl" variableName="configDataTotal" />
+			</ee:variables>
+		</ee:transform>
+		<ee:transform doc:name="Sort Table Names and Columns" doc:id="524f8ff0-8294-4728-8529-ceac27208952">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable resource="dataweave/list-of-min-max-avg-queries.dwl" variableName="listOfMaxMinAvgQueries" />
+				<ee:set-variable resource="dataweave/list-of-total-columns-queries.dwl" variableName="listOfTotalQueries" />
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="database-connections" doc:id="327cc97f-a407-441d-921e-8fae6e6b4f69" >
+		<avio-logger:log doc:name="START" doc:id="14cb0332-fd30-41dd-87d8-3edccb1ab961" config-ref="avioCoreConfig" message='#["Start Data Pull from Table: " ++ vars.tableName default "Error: Table Not found"]' />
+		<until-successful maxRetries="${retry.count}" doc:name="Until Successful" doc:id="0db76b0e-76fe-49e3-b1eb-981b5f7b4803" millisBetweenRetries="${retry.interval}">
+					<try doc:name="Try" doc:id="56911859-8214-46be-99e9-c80b9418308a">
+						<db:select doc:name="Extract Data from DB" doc:id="ae0ed6ae-e896-41d9-b083-7a84b6880959" config-ref="databaseConfig">
 			<db:sql><![CDATA[#[payload]]]></db:sql>
 		</db:select>
-			<ee:transform doc:name="Validate DB Response" doc:id="d7c29c96-58c4-4478-a162-9a0a58032188">
+						<error-handler>
+							<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6f2113fd-130f-4745-8f7c-8868aff27dc6" type="DB:CONNECTIVITY">
+						<avio-logger:log doc:name="ERROR" doc:id="e9e5ad63-42fe-4280-a610-581e7d3f7c67" config-ref="avioCoreConfig" message="connectivity error occured" level="ERROR"/>
+							</on-error-propagate>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="61fd6289-f7c7-403f-b937-5a662b315b10" type="ANY">
+						<avio-logger:log doc:name="ERROR" doc:id="4e922b4c-5e2c-4258-a420-27b549fa7519" config-ref="avioCoreConfig" message="Permenant error occured" level="ERROR"/>
+						<set-variable value="#[error.description]" doc:name="Set Error Msg" doc:id="17672cff-840f-4cf1-866c-9a0396b464f0" variableName="errorMsg"/>
+					</on-error-continue>
+						</error-handler>
+					</try>
+				</until-successful>
+		<choice doc:name="Check for connectivity Errors?" doc:id="c6131529-1c87-4e47-8c9f-c949462dfa2e" >
+			<when expression="#[not isEmpty(vars.errorMsg) == true]">
+				<raise-error doc:name="Raise error" doc:id="0cb211b0-bfa3-431b-8e29-7fb2c56304c3" type="CUST:ERROR" description="#[vars.errorMsg]" />
+			</when>
+			<otherwise >
+				<avio-logger:log doc:name="END" doc:id="05bc568f-6396-4b2c-9eb3-0cca0cb7158b" config-ref="avioCoreConfig" message='#["Completed Data Pull from Table: " ++ vars.tableName default "Error: Table Not found"]' />
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="smb-connections" doc:id="f4da3e68-b9f3-45cd-a71a-7d0a68ef9833" >
+		<avio-logger:log doc:name="START" doc:id="e8cd6853-5752-481c-889a-d5c4e474e6de" config-ref="avioCoreConfig" message="Sending file to SMB Server location - MulesoftIMPfiles" />
+		<smb:file-write doc:name="Operator10 SMB location" doc:id="946f4f2e-a287-4a98-897f-ed4f5136d7ef" config-ref="SMBConnectorConfig" fileName='#["mulesoft-op10-" ++ vars.updateFrom ++ ".imp"]'/>
+		<avio-logger:log doc:name="END" doc:id="e686b345-9486-4909-868f-cc84be37f30b" config-ref="avioCoreConfig" message="File successfully sent to SMBlocation - MulesoftIMPfiles"/>
+	</sub-flow>
+	<sub-flow name="op10-file-format" doc:id="22d208a7-3929-40f5-9dd9-4fb4bb6b9c21">
+		<ee:transform doc:name="Op10 Output File" doc:id="ecc8360b-654a-4623-a164-a17ff9c719b8">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
-output application/json skipNullOn="everywhere"
+output application/csv separator="\t", header=false
 ---
-payload]]></ee:set-payload>
+(vars.minMaxAvgRecordsOutputFile default []) ++ (vars.totalRecordsOutputFile default [])]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-			<choice doc:name="Check if DB Response is Empty?" doc:id="839c9f04-24d8-47d0-8db8-3a415202a8fd">
+		<avio-logger:log doc:name="DEBUG" doc:id="6d35922f-e46f-4e1e-bca4-d7db41c1d0bf" config-ref="avioCoreConfig" payload='#[write(payload,"application/csv", {"header":false})]' message="Full Import file data for op10" />
+	</sub-flow>
+	<sub-flow name="op10-error-list" doc:id="0734b7f5-5938-4875-8e6c-b8cdce101b17">
+		<ee:transform doc:name="op10 Error List" doc:id="5f85afd4-897f-427d-9d69-5bf151754386">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="fullErrorResponse"><![CDATA[%dw 2.0
+output application/json
+---
+(vars.minMaxAvgErrorResponse default []) ++ (vars.totalRecordsErrorResponse default [])]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="If Errors exists?" doc:id="67a7ec74-f470-4a21-8186-00a82eff9bf8" >
+			<when expression="#[sizeOf(vars.fullErrorResponse) != 0]">
+				<avio-logger:log doc:name="ERROR" doc:id="bc0267fe-0a48-4745-aaab-8132f939144d" config-ref="avioCoreConfig" level="ERROR" payload='#[write(vars.fullErrorResponse,"application/json")]' message="Full Error List of Op10 Processing" />
+			</when>
+			<otherwise >
+				<avio-logger:log doc:name="INFO" doc:id="dfb7ce2c-ed51-408b-b38b-7b0b4ec7a5b0" config-ref="avioCoreConfig" message="No errors found to log"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<flow name="extract-min-max-avg-records" doc:id="8041a6dc-d43b-4170-b111-81fd89d9982f">
+		<avio-logger:log doc:name="START" doc:id="5955d35e-7d50-4615-ad45-c41d81459a00" config-ref="avioCoreConfig" message="Starting to Process Min, Max and Avg Records" />
+		<parallel-foreach doc:name="Parallel For Each" doc:id="64cbc375-7b62-49a0-80e7-f6ec2326eb19" collection="#[vars.listOfMaxMinAvgQueries]" maxConcurrency="${max.concurrency}">
+			<try doc:name="Try" doc:id="030236c4-d63c-41f7-8138-7857e87d2d86">
+				<set-variable value="#[payload.tableName]" doc:name="Set Table Name" doc:id="6144951b-6fce-4a14-9327-fec785b0e9f8" variableName="tableName" />
+				<ee:transform doc:name="Construct Query" doc:id="a3e80b58-9ffa-4b1d-a769-6a28ba11052c">
+				<ee:message>
+						<ee:set-payload resource="dataweave/construct-queries-for-MinMaxAvg.dwl" />
+				
+</ee:message>
+			</ee:transform>
+				<flow-ref doc:name="database-connections" doc:id="36dc74b2-d105-4c09-bf17-ef97e7f9a06e" name="database-connections" />
+				<ee:transform doc:name="Validate DB Response" doc:id="1b975cd3-cf3b-4baf-98db-298a74f8d18b">
+			<ee:message>
+						<ee:set-payload resource="dataweave/db-response-skipnulls.dwl" />
+			
+</ee:message>
+		</ee:transform>
+				<choice doc:name="Check if DB Response is Empty?" doc:id="ae8ef160-0148-43bd-9f22-312b1df1ad83">
+				<when expression="#[isEmpty(payload[0]) == false]">
+					<ee:transform doc:name="Create OP10 File as JSON" doc:id="98a34054-346a-4973-ac39-1b1640c75e1c">
+						<ee:message>
+								<ee:set-payload resource="dataweave/create-OP10-file-as-json-MinMaxAvg.dwl" />
+						
+</ee:message>
+					</ee:transform>
+					<ee:transform doc:name="Trim Avgs" doc:id="4e8c87ae-5f2f-4e56-a951-684b947ccfe2">
+						<ee:message>
+								<ee:set-payload resource="dataweave/trim-avgs.dwl" />
+						</ee:message>
+					</ee:transform>
+				
+</when>
+				<otherwise>
+						<avio-logger:log doc:name="INFO" doc:id="8877864e-3eea-4eb9-b137-c2b808df2811" config-ref="avioCoreConfig" message='#["Database Response is null for table: " ++ vars.tableName default ""]' />
+				
+</otherwise>
+			</choice>
+				<error-handler>
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="811c34d7-5ca2-43f8-9dd9-984dc9567b5f" type="ANY">
+						<avio-logger:log doc:name="ERROR" doc:id="7dd8307a-3c59-4ce8-a50e-1e06ee75681f" config-ref="avioCoreConfig" message='#["failed to process the table: " ++ vars.tableName default ""]' level="ERROR" />
+						<ee:transform doc:name="errorPayload" doc:id="d7c426f4-c677-472c-8635-32386ce09a57">
+							<ee:message>
+								<ee:set-payload resource="dataweave/for-each-error-payload.dwl" />
+							</ee:message>
+							<ee:variables>
+							</ee:variables>
+						</ee:transform>
+						<avio-logger:log doc:name="ERROR" doc:id="c96c3893-2762-43a9-829f-6505385327cf" config-ref="avioCoreConfig" message="Error Payload for failed data pull - Moving to next Iteration" payload='#[write(vars.errorPayload,"application/json")]' level="ERROR" />
+					</on-error-continue>
+				</error-handler>
+			</try>
+		</parallel-foreach>
+		<ee:transform doc:name="Create OP10 File Data" doc:id="4aafbf34-2c0d-4b92-a5ed-26b24e1eee23">
+						<ee:message>
+						</ee:message>
+			<ee:variables>
+				<ee:set-variable resource="dataweave/min-max-avg-records-output-file.dwl" variableName="minMaxAvgRecordsOutputFile" />
+				<ee:set-variable resource="dataweave/min-max-avg-error-response.dwl" variableName="minMaxAvgErrorResponse" />
+			</ee:variables>
+					
+</ee:transform>
+		<avio-logger:log doc:name="SUCCESS" doc:id="312da931-26b3-414f-9e2f-b29fb0cd0d44" config-ref="avioCoreConfig" message="List of MinMaxAvg records success response" payload='#[write(vars.minMaxAvgRecordsOutputFile,"application/csv", {"header":false})]' />
+		<avio-logger:log doc:name="ERROR" doc:id="e39d0f9d-825b-4136-a7ef-d375ea333266" config-ref="avioCoreConfig" message="List of MinMaxAvg records error response" payload='#[write(vars.minMaxAvgErrorResponse,"application/json")]'/>
+		<avio-logger:log doc:name="END" doc:id="d95296e5-b978-4252-aca9-ba3db774e022" config-ref="avioCoreConfig" message="Min, Max and Avg records processing completed" />
+	
+</flow>
+	<flow name="extract-total-records" doc:id="7153c652-ad89-422d-aa9d-421648aa0909" >
+		<avio-logger:log doc:name="START" doc:id="27d51302-0070-42f3-b904-77a784baf321" config-ref="avioCoreConfig" message="Starting to Process Total Valued Records" />
+		<parallel-foreach doc:name="Parallel For Each" doc:id="22b11aa6-91db-413d-8ee0-5f330f98d903" collection="#[vars.listOfTotalQueries]" maxConcurrency="${max.concurrency}">
+			<try doc:name="Try" doc:id="96bf354f-f6bc-442f-a296-3ddf5a97baf2" >
+				<set-variable value="#[payload.tableName]" doc:name="Set Table Name" doc:id="16b485e5-2282-4a61-a067-15a316ccf6c9" variableName="tableName" />
+				<ee:transform doc:name="Construct Query" doc:id="d2177698-5c86-4544-8ed7-07e2d6ec92a3">
+				<ee:message>
+						<ee:set-payload resource="dataweave/construct-queries-for-total-columns.dwl" />
+				</ee:message>
+			</ee:transform>
+				<flow-ref doc:name="database-connections" doc:id="d131f1c4-d23b-4cb9-8701-8f82849b452a" name="database-connections"/>
+				<ee:transform doc:name="Validate DB Response" doc:id="d7c29c96-58c4-4478-a162-9a0a58032188">
+			<ee:message>
+						<ee:set-payload resource="dataweave/db-response-skipnulls.dwl" />
+
+			</ee:message>
+		</ee:transform>
+				<choice doc:name="Check if DB Response is Empty?" doc:id="839c9f04-24d8-47d0-8db8-3a415202a8fd">
 				<when expression="#[isEmpty(payload) == false]">
 					<ee:transform doc:name="Filter Yesterday and Today record" doc:id="a5136984-ddc3-4f03-8486-909a49118aab">
 						<ee:message>
-							<ee:set-payload><![CDATA[output application/json
-var yesterdayRecord = payload filter ($.TIMESTAMP > (vars.updateFrom as Date ++ "T22:55") and $.TIMESTAMP < (vars.updateFrom as Date ++ "T22:59"))
-var todayRecord = payload filter ($.TIMESTAMP > (vars.updateTo as Date ++ "T01:15") and $.TIMESTAMP < (vars.updateTo as Date ++ "T01:19"))
----
-(yesterdayRecord default "" ++ todayRecord default "") map {
-	remove: $ - "TIMESTAMP"
-}.remove]]></ee:set-payload>
+								<ee:set-payload resource="dataweave/filter-yesterday-and-today-records.dwl" />
 						</ee:message>
 					</ee:transform>
 					<ee:transform doc:name="Create OP10 File as JSON" doc:id="44052efe-e1d9-455d-8509-2c75cd5cbdcb">
 						<ee:message>
-							<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-vars.configDataTotal filter ($."SCADA Table" == vars.tableName) map ((item, index) -> {
-  date: vars.updateFrom as Date as String {format:"MM/dd/yyyy"},
-  facilityId: "111",
-  location: item.Location,
-  parameter: item.Parameter,
-  dataValue: (if (item."Total Method" == "Yesterday") payload[0] else payload[1])[item.'SCADA Tag' ++ "__" ++ item.'SCADA Column']
-})]]></ee:set-payload>
+								<ee:set-payload resource="dataweave/create-OP10-file-as-json-Total.dwl" />
 						</ee:message>
 					</ee:transform>
 				</when>
 				<otherwise>
-					<logger level="INFO" doc:name="Logger" doc:id="b4136661-61d2-4a67-8db8-4cb385fa443e" message="Payload is null" />
+						<avio-logger:log doc:name="INFO" doc:id="b2ef6e49-2c87-4f1e-bb3d-e3371a169f9f" config-ref="avioCoreConfig" message='#["Database Response is null for table: " ++ vars.tableName default ""]'/>
 				</otherwise>
 			</choice>
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="db1ae4a5-1db0-4c96-80f5-c3cebec93d6e" type="ANY" >
+						<avio-logger:log doc:name="ERROR" doc:id="aa86708e-8eb4-4142-bff8-0933f34a894d" config-ref="avioCoreConfig" message='#["failed to process the table: " ++ vars.tableName default ""]' level="ERROR" />
+						<ee:transform doc:name="errorPayload" doc:id="97d85005-060e-4e55-967d-f8b0c7e37ecc" >
+							<ee:message >
+								<ee:set-payload resource="dataweave/for-each-error-payload.dwl" />
+							</ee:message>
+							<ee:variables />
+						</ee:transform>
+						<avio-logger:log doc:name="ERROR" doc:id="b6c98fec-6aec-49c7-9c33-e5348ff0fed8" config-ref="avioCoreConfig" message="Error Payload for failed data pull - Moving to next Iteration" payload='#[write(vars.errorPayload,"application/json")]' level="ERROR" />
+					</on-error-continue>
+				</error-handler>
+			</try>
 		</parallel-foreach>
 		<ee:transform doc:name="Create OP10 File Data" doc:id="3b3b1d47-a05f-4dd2-9f01-21fcc31d3102">
 						<ee:message>
 						</ee:message>
 			<ee:variables >
-				<ee:set-variable variableName="totalRecordsOutputFile" ><![CDATA[%dw 2.0
-output application/csv separator="\t", header=false
----
-flatten(payload..payload) filter ($ != {})]]></ee:set-variable>
+				<ee:set-variable resource="dataweave/total-records-error-response.dwl" variableName="totalRecordsErrorResponse" />
+				<ee:set-variable resource="dataweave/total-records-output-file.dwl" variableName="totalRecordsOutputFile" />
 			</ee:variables>
 					</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="bfb5554b-db16-4c8e-9b08-f8733ff86528" message="#[vars.totalRecordsOutputFile]" />
+		<avio-logger:log doc:name="SUCCESS" doc:id="e677ef59-4fd4-42dc-945e-97599ff04702" config-ref="avioCoreConfig" message="List of Total Records success Response" payload='#[write(vars.totalRecordsOutputFile,"application/csv", {"header":false})]'/>
+		<avio-logger:log doc:name="ERROR" doc:id="a1f73e49-359c-4bdd-af9f-4186ebf5bf25" config-ref="avioCoreConfig" payload='#[write(vars.totalRecordsErrorResponse,"application/json")]' message="List of Total Records Error Response"/>
+		<avio-logger:log doc:name="END" doc:id="b7482b82-8055-4241-9445-33bdc70bb533" config-ref="avioCoreConfig" message="Total Valued Records processing completed"/>
 	</flow>
-	<flow name="extract-min-max-avg-records" doc:id="8041a6dc-d43b-4170-b111-81fd89d9982f" >
-		<parallel-foreach doc:name="Parallel For Each" doc:id="a38bfb30-7f6f-4a58-a1a1-7f879c5a077d" collection="#[vars.listOfMaxMinAvgQueries]">
-			<logger level="INFO" doc:name="INFO" doc:id="07876ad1-d19f-4308-9136-6dc435a896a2" message='#["Constructing Query for Table: " ++ payload.tableName default "Error: Table Not found"]' />
-			<set-variable value="#[payload.tableName]" doc:name="Set TableName" doc:id="6144951b-6fce-4a14-9327-fec785b0e9f8" variableName="tableName" />
-			<ee:transform doc:name="ConstructQuery" doc:id="a3e80b58-9ffa-4b1d-a769-6a28ba11052c">
-				<ee:message>
-					<ee:set-payload><![CDATA[%dw 2.0
-var split = payload.tableValues splitBy ","
-
-var queryPrefix = "Select "
-
-var innerQueryPrefix = "Select top 1 "
-
-var innerQueryFrom = " from dbo."
-
-fun matrix(value, col, table) =
-  value match {
-    case "Total" -> ("max(" ++ col ++ ")")
-    case "Maximum" -> ("max(" ++ col ++ ")")
-    case "Minimum" -> ("min(" ++ col ++ ")")
-    case "Average" -> ("avg(" ++ col ++ ")")
-  }
-
-var queryCondition= innerQueryFrom ++ (vars.configDataMinMaxAvg filter (split contains $."SCADA Tag"))[0]."SCADA Table" ++ " where Timestamp >= " ++ "'" ++ vars.updateFrom ++ "'" ++ " and Timestamp < " ++ "'" ++  vars.updateTo ++ "'"
-
-//var querySuffix = if(sizeOf(split) == 1) queryCondition  else  ""
-var querySuffix = queryCondition
-output application/json  
----
-queryPrefix
-
-++
-
-((vars.configDataMinMaxAvg filter (split contains $."SCADA Tag") map (matrix($."Query Type" ,$."SCADA Tag", $."SCADA Table") ++ (" " ++ $."SCADA Tag" ++ "__" ++ $."SCADA Column"))) joinBy ",")
-
-++ 
-
-querySuffix
-
-]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			<logger level="INFO" doc:name="Logger" doc:id="42bf73ae-9643-46c9-84dc-bee2329b76f3" message="#[payload]" />
-			<db:select doc:name="Extract Data from DB" doc:id="ae0ed6ae-e896-41d9-b083-7a84b6880959" config-ref="databaseConfig">
-			<db:sql><![CDATA[#[payload]]]></db:sql>
-		</db:select>
-			<logger level="INFO" doc:name="Log DB response" doc:id="552be7fe-3799-4f0a-ae35-9fb302d76214" message='#[output json&#10;---&#10;{&#10;	message: "log DB Response for Table: " ++ vars.tableName default "" ,&#10;	dbresponse: payload&#10;}]' />
-			<ee:transform doc:name="Validate DB Response" doc:id="1b975cd3-cf3b-4baf-98db-298a74f8d18b">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/json skipNullOn="everywhere"
----
-payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-			<choice doc:name="Check if DB Response is Empty?" doc:id="ae8ef160-0148-43bd-9f22-312b1df1ad83">
-				<when expression="#[isEmpty(payload[0]) == false]">
-					<ee:transform doc:name="Create OP10 File as JSON" doc:id="98a34054-346a-4973-ac39-1b1640c75e1c">
-						<ee:message>
-							<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-vars.configDataMinMaxAvg filter ($."SCADA Table" == vars.tableName) map ((item, index) -> {
-  date: vars.updateFrom as Date as String {format:"MM/dd/yyyy"},
-  facilityId: "111",
-  location: item.Location,
-  parameter: item.Parameter,
-  dataValue: payload[0] [item.'SCADA Tag' ++ "__" ++ item.'SCADA Column']
-})]]></ee:set-payload>
-						</ee:message>
-					</ee:transform>
-					<ee:transform doc:name="Trim Avgs" doc:id="4e8c87ae-5f2f-4e56-a951-684b947ccfe2">
-						<ee:message>
-							<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload map ((item, index) -> {
-	date: item.date,
-	facilityId: item.facilityId,
-	location: item.location,
-	parameter: item.parameter,
-	dataValue: if ( sizeOf((item.dataValue splitBy '.')[0]) == 1 and (item.dataValue splitBy ".")[0] == "0" ) item.dataValue as String {
-		format: "#.################"
-	} else
-if ( sizeOf((item.dataValue splitBy '.')[0]) == 1 ) item.dataValue as String {
-		format: "#.##############"
-	} else 
-if ( sizeOf((item.dataValue splitBy '.')[0]) == 2 ) item.dataValue as String {
-		format: "#.#############"
-	} else 
-if ( sizeOf((item.dataValue splitBy '.')[0]) == 3 ) item.dataValue as String {
-		format: "#.############"
-	} else 
-if ( sizeOf((item.dataValue splitBy '.')[0]) == 4 ) item.dataValue as String {
-		format: "#.###########"
-	} else 
-if ( sizeOf((item.dataValue splitBy '.')[0]) == 5 ) item.dataValue as String {
-		format: "#.##########"
-	} else 
-if ( sizeOf((item.dataValue splitBy '.')[0]) == 6 ) item.dataValue as String {
-		format: "#.#########"
-	} else 
-item.dataValue
-})]]></ee:set-payload>
-						</ee:message>
-					</ee:transform>
-					<logger level="INFO" doc:name="Logger" doc:id="1a4d5f0e-1bc7-4c7d-8661-b9f3c1e50171" message="#[payload]" />
-				
-</when>
-				<otherwise>
-					<logger level="INFO" doc:name="Logger" doc:id="5c5c39fc-aafe-48be-93a8-caf09484526d" message="Payload is null" />
-				</otherwise>
-			</choice>
-		</parallel-foreach>
-		<ee:transform doc:name="Create OP10 File Data" doc:id="4aafbf34-2c0d-4b92-a5ed-26b24e1eee23">
-						<ee:message>
-						</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="minMaxAvgRecordsOutputFile" ><![CDATA[%dw 2.0
-output application/csv separator="\t", header=false
----
-flatten(payload..payload) filter ($ != {})]]></ee:set-variable>
-			</ee:variables>
-					
-</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="e935b36c-d040-4835-9cf8-e87ab0b91386" message="#[vars.minMaxAvgRecordsOutputFile]" />
-	</flow>
-	<flow name="op10-processing-impl" doc:id="898dd829-1f03-47c5-a388-fd8c93ebef48" >
-		<logger level="INFO" doc:name="Logger" doc:id="4e2b3f32-ec1a-4991-a40e-37e74a8ae52a" message="Remove - testing"/>
-		<flow-ref doc:name="set-dates" doc:id="c3576891-a3bd-4396-87c6-458a3e86677a" name="set-dates"/>
-		<ee:transform doc:name="Extract Config File Data" doc:id="a9bb67ca-d638-4a17-98a8-7ddeafc33d5b" >
-			<ee:message >
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="configData" ><![CDATA[%dw 2.0
-var configFileData = readUrl("classpath://configMapping/mule-config.xlsx", "application/xlsx")
-output application/json
----
-configFileData]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-		<ee:transform doc:name="Split Total Query Type with Others" doc:id="c9bdf340-e704-4c36-a486-e2d07342cc84" >
-			<ee:message >
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="configDataTotal" ><![CDATA[%dw 2.0
-output json
----
-vars.configData.mapping map $ filter $.'Query Type' == "Total"]]></ee:set-variable>
-				<ee:set-variable variableName="configDataMinMaxAvg" ><![CDATA[%dw 2.0
-output json
----
-vars.configData.mapping map $ filter $.'Query Type' != "Total"]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-		<ee:transform doc:name="Sort Table Names and Columns" doc:id="524f8ff0-8294-4728-8529-ceac27208952" >
-			<ee:message >
-			</ee:message>
-			<ee:variables >
-				<ee:set-variable variableName="listOfTotalQueries" ><![CDATA[%dw 2.0
-var groupedByTable = vars.configDataTotal groupBy $."SCADA Table" mapObject ((value, key, index) -> {
-  listOfFields: value.."SCADA Tag" joinBy ","
-})
-output application/json  
----
-groupedByTable pluck ((value1, key1, index1) -> {
-  tableValues: value1,
-  tableName : (vars.configDataTotal filter ((value1) contains $."SCADA Tag"))[0]."SCADA Table"
-})]]></ee:set-variable>
-				<ee:set-variable variableName="listOfMaxMinAvgQueries" ><![CDATA[%dw 2.0
-var groupedByTable = vars.configDataMinMaxAvg groupBy $."SCADA Table" mapObject ((value, key, index) -> {
-  listOfFields: value.."SCADA Tag" joinBy ","
-})
-output application/json  
----
-groupedByTable pluck ((value1, key1, index1) -> {
-  tableValues: value1,
-  tableName : (vars.configDataMinMaxAvg filter ((value1) contains $."SCADA Tag"))[0]."SCADA Table"
-})]]></ee:set-variable>
-			</ee:variables>
-		</ee:transform>
-		<flow-ref doc:name="extract-min-max-avg-records" doc:id="e4dafe46-4730-4d55-9866-c1289bfce681" name="extract-min-max-avg-records" />
-		<logger level="INFO" doc:name="Logger" doc:id="3f3b2fab-6f11-4bc5-b724-a9633262679c" message="MIN-MAX-AVG COMPLTED - STARTING TOTAL PULL"/>
-		<flow-ref doc:name="extract-total-records" doc:id="3127d1f7-8a6e-4773-885e-0f048de61598" name="extract-total-records"/>
-		<ee:transform doc:name="Op10 Output File" doc:id="ccc94060-cce0-4f33-a166-ad74824f4e98" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
-output application/csv separator="\t", header=false
----
-vars.minMaxAvgRecordsOutputFile default "MinMaxAvg Output file Empty" ++ vars.totalRecordsOutputFile default "Total Output file Empty"]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<logger level="INFO" doc:name="Output File Data DEBUG" doc:id="bdb5b0a3-c4fc-4338-bbca-6680f6629045" message="#[payload]"/>
-		<logger level="INFO" doc:name="Logger" doc:id="25142b69-4b04-4038-9539-85c96ee4be81" message="Before end"/>
-		<logger level="INFO" doc:name="Logger" doc:id="f5119817-7f85-4aad-a56c-370af02175b5" message="file dropped in op10 DB location"/>
-	
-</flow>
 </mule>

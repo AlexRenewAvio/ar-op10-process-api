@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd">
+	<sub-flow name="set-update-from-date" doc:id="4372c2e7-30d9-4fcc-a95a-86b33ae13b9d" >
+		 <avio-logger:log doc:name="START" doc:id="4035232c-005a-4a3f-a7d3-1607991389ee" config-ref="avioCoreConfig" message="Start UpdateFrom watermark"/>
+		<ee:transform doc:name="objectStore variables" doc:id="1811296c-2277-410d-b9e9-efd028faa30d">
+			<ee:variables>
+				<ee:set-variable variableName="objectStoreKey"><![CDATA[attributes.queryParams.'objectStoreKey']]></ee:set-variable>
+				<ee:set-variable variableName="objectStoreName"><![CDATA[attributes.queryParams.'objectStoreName']]></ee:set-variable>
+				<ee:set-variable variableName="updateFrom" ><![CDATA[attributes.queryParams.'updateFrom']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Check if ObjectStore Exists?" doc:id="52c7af8d-2792-4f6a-8351-f27865a52d5b" >
+			<when expression='#[vars.objectStoreName == "dateWatermark"]'>
+				<avio-logger:log doc:name="PROCESS" doc:id="0fea8844-6985-419e-91b3-7d3d02fa4303" config-ref="avioCoreConfig" message="Stroring updateFrom Key"/>
+				<os:store doc:name="UpdateFrom" doc:id="81b128d9-622f-4695-9dbd-3a060ac04a4b" objectStore="dateWatermark" key="#[vars.objectStoreKey]">
+					<os:value ><![CDATA[#[vars.updateFrom]]]></os:value>
+				</os:store>
+			
+</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="c3648bf5-e41d-4a04-b303-6dbfca90f290" type="APP:NOT_FOUND" description='#["No object store named $(vars.objectStoreName) found"]'/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Response" doc:id="03d655b9-1a6b-44c3-8bc0-443da8eb4c03" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "updateFrom Watermark Updated Successfully",
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<avio-logger:log doc:name="END" doc:id="2bc7ddfd-c6a5-46c9-8402-45823b811f97" config-ref="avioCoreConfig" message="End UpdateFrom date watermark"/>
+	</sub-flow>
+	<sub-flow name="set-update-to-date" doc:id="091c7ad9-7590-4466-b774-c91ca2c9164e" >
+		 <avio-logger:log doc:name="START" doc:id="600b410f-8ad6-45b9-9e5e-ec587d633c8c" config-ref="avioCoreConfig" message="Start updateTo watermark"/>
+		<ee:transform doc:name="objectStore variables" doc:id="1725fa0d-0444-4afa-ab69-9e0efcd36d09">
+			<ee:variables>
+				<ee:set-variable variableName="objectStoreKey"><![CDATA[attributes.queryParams.'objectStoreKey']]></ee:set-variable>
+				<ee:set-variable variableName="objectStoreName"><![CDATA[attributes.queryParams.'objectStoreName']]></ee:set-variable>
+				<ee:set-variable variableName="updateTo" ><![CDATA[attributes.queryParams.'updateTo']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Check if ObjectStore Exists?" doc:id="c7b3837c-6e33-486b-a9c0-afbcb07c2fce" >
+			<when expression='#[vars.objectStoreName == "dateWatermark"]'>
+				<avio-logger:log doc:name="PROCESS" doc:id="69359bfb-19e9-4b0d-9c9b-f06602e4a864" config-ref="avioCoreConfig" message="Stroring updateTo Key"/>
+				<os:store doc:name="UpdateTo" doc:id="0bed3593-7258-4d51-bfb5-00430b766311" objectStore="dateWatermark" key="#[vars.objectStoreKey]">
+					<os:value ><![CDATA[#[vars.updateTo]]]></os:value>
+				</os:store>
+			
+</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="1b62340e-1a85-481f-b48c-daa2e9ead40e" type="APP:NOT_FOUND" description='#["No object store named $(vars.objectStoreName) found"]'/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Response" doc:id="fd929bc1-517b-49c4-908f-f39849404db0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "UpdateTo Watermark Updated Successfully",
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<avio-logger:log doc:name="END" doc:id="d71ce5b6-3157-4857-8c6b-01dd414b84db" config-ref="avioCoreConfig" message="End UpdateTo date watermark"/>
+	</sub-flow>
+	<sub-flow name="retrive-keys" doc:id="1735152c-7c7f-4fbf-9f5a-8341d9bf1433" >
+		<avio-logger:log doc:name="START" doc:id="5d87dd68-1b29-4c0b-9acd-f37c7d82ed42" config-ref="avioCoreConfig" message="Retrive current Keys from Object Store"/>
+		<ee:transform doc:name="objectStore variables" doc:id="b3c33746-a375-4438-a24c-e494ec089499">
+			<ee:variables>
+				<ee:set-variable variableName="objectStoreName"><![CDATA[attributes.queryParams.'objectStoreName']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Check if ObjectStore Exists?" doc:id="796eab9c-1371-4cce-812e-06b7cc73b8c9" >
+			<when expression='#[vars.objectStoreName == "dateWatermark"]'>
+				<avio-logger:log doc:name="PROCESS" doc:id="e53a5d3c-c2f1-4563-bdbd-0a4335efda3d" config-ref="avioCoreConfig" message="Retriving Keys from date watermark object store" />
+				<os:retrieve-all doc:name="Retrieve all" doc:id="1f1194ec-fcdb-442e-ad9c-38808316c48f" objectStore="dateWatermark" />
+			
+</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="acbc9b72-bb50-499c-a3b7-0e7ca12ae147" type="APP:NOT_FOUND" description='#["No object store named $(vars.objectStoreName) found"]' />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Response" doc:id="76d7650e-0fee-4110-94df-4b932259ad30" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<avio-logger:log doc:name="END" doc:id="605a8b67-0b24-4f92-b593-c6ea55a18977" config-ref="avioCoreConfig" payload='#[write(payload,"application/json")]' message="End Retriving Keys"/>
+	</sub-flow>
+</mule>
