@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:avio-core="http://www.mulesoft.org/schema/mule/avio-core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
-http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
-http://www.mulesoft.org/schema/mule/avio-core http://www.mulesoft.org/schema/mule/avio-core/current/mule-avio-core.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
-	<flow name="ar-op10-process-api-main" doc:id="5fb8551c-39a0-43fb-9ae5-944d1ea8e1ec" >
-		<http:listener doc:name="Listener" doc:id="74e36466-5abe-47f4-922c-469f2254babb" config-ref="httpListenerConfigArOp10ProcessApi" path="${https.listener.path}"/>
-		<avio-logger:log doc:name="Log" doc:id="37bd0727-667f-4969-a677-4d660085764d" config-ref="avioCoreConfig" message="This is a tets message"/>
-	</flow>
-	
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd">
+    <http:listener-config name="HTTP_Listener_config_remove" doc:name="HTTP Listener config" doc:id="a89895a1-8bca-4bf5-9c14-37c9e4b7b044" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="op10-process-api-main">
+        <http:listener config-ref="httpListenerConfigArOp10ProcessApi" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <avio-logger:log doc:name="Log" doc:id="09952aa3-804f-495b-a993-1aa09156bb4b" config-ref="avioCoreConfig" message="Request received to Update Date"/>
+		<apikit:router config-ref="op10-process-api-config" />
+		<error-handler ref="globalErrorHandler" />
+    </flow>
+	<flow name="get:\v1\retrive-all:op10-process-api-config">
+		<flow-ref doc:name="retrive-keys" doc:id="d7b46eac-a0a8-4263-a1fd-e2c4c12d2844" name="retrive-keys"/>
+    </flow>
+    <flow name="put:\v1\update-from:op10-process-api-config">
+		<flow-ref doc:name="set-update-from-date" doc:id="1a1f82ce-31ea-494e-8035-fea60dfdcfe1" name="set-update-from-date"/>
+    </flow>
+    <flow name="put:\v1\update-to:op10-process-api-config">
+		<flow-ref doc:name="set-update-to-date" doc:id="24b65eb1-e022-4714-a4a9-c0975c51b092" name="set-update-to-date"/>
+    </flow>
 </mule>

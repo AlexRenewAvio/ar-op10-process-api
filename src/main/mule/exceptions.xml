@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
-	xmlns:avio-core="http://www.mulesoft.org/schema/mule/avio-core" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger" xmlns:avio-core="http://www.mulesoft.org/schema/mule/avio-core"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/avio-core http://www.mulesoft.org/schema/mule/avio-core/current/mule-avio-core.xsd
-http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd">
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
 	<error-handler name="globalErrorHandler">
             <on-error-propagate type="APIKIT:BAD_REQUEST" enableNotifications="true" logException="true">
 				<set-variable value="400" doc:name="Set HTTP Status code" doc:id="b7d9578d-97e3-47a1-9080-49ddd325b04d" variableName="statusCode"/>
@@ -45,7 +46,6 @@ output application/json
 ---
 {
 	statusCode: vars.statusCode,
-	apiInError: p('secure::api.name') ++ "/" ++ p('secure::api.version'),
 	correlationId: vars.headerAttributes.correlationId,
   	error: {
   		"type": (error.errorType.namespace ++ ":" ++ error.errorType.identifier as String) default "Not found",
@@ -55,6 +55,7 @@ output application/json
 ]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<avio-logger:log doc:name="Log" doc:id="ebfba733-3d96-4f0a-86e2-98850963ed11" config-ref="avioCoreConfig" message='"Exception Occured'/>
+		<avio-logger:log doc:name="Error" doc:id="ebfba733-3d96-4f0a-86e2-98850963ed11" config-ref="avioCoreConfig" message='Exception Occured' level="ERROR"/>
 	</sub-flow>
+
 </mule>
