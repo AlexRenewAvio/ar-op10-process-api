@@ -50,9 +50,6 @@ http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule
 		<tls:key-store type="${tls.keystore.type}" path="${tls.keystore.path}" alias="reyes-coke" keyPassword="${secure::tls.keystore.password}" password="${secure::tls.keystore.key.password}"/>
 	</tls:context>
 	
-	<!-- This is an Import of Health check API flows -->	
-	<!--import doc:name="Import" file="health-check-api.xml"/-->
-	
 	<!-- This is the configuration to refer properties in properties file. -->
 	<configuration-properties doc:name="Configuration properties"  doc:id="a2fb73ae-d81d-47da-9dbe-b76cabf6c375" file="properties/${mule.env}.properties" />
 	
