@@ -103,42 +103,6 @@ stages:
       appArtifactId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appArtifactId'] ]
       appVersion: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appVersion'] ]
       appGroupId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appGroupId'] ]
-    
-# Stage for Deploying your application to QA
-- stage: Release_Stage_QA
-  displayName: Deploy to QA
-  variables:
-    - group: releaseVariables_QA
-  dependsOn: 
-  - Build_Stage
-  - Release_Stage_DEV
-  condition: in(dependencies.Release_Stage_DEV.result, 'Succeeded', 'SucceededWithIssues')
-  jobs:
-  - job: Deploy_to_QA
-  - template: release-pipeline.yml
-    parameters:
-      environment: QA
-      appArtifactId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appArtifactId'] ]
-      appVersion: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appVersion'] ]
-      appGroupId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appGroupId'] ]
-
-# Stage for Deploying your application to UAT
-- stage: Release_Stage_UAT
-  displayName: Deploy to UAT
-  variables:
-    - group: releaseVariables_UAT
-  dependsOn: 
-  - Build_Stage
-  - Release_Stage_QA
-  condition: in(dependencies.Release_Stage_QA.result, 'Succeeded', 'SucceededWithIssues')
-  jobs:
-  - job: Deploy_to_UAT
-  - template: release-pipeline.yml
-    parameters:
-      environment: UAT
-      appArtifactId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appArtifactId'] ]
-      appVersion: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appVersion'] ]
-      appGroupId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appGroupId'] ]
       
 # Stage for Deploying your application to Prod
 - stage: Release_Stage_PROD
@@ -147,8 +111,8 @@ stages:
     - group: releaseVariables_PROD
   dependsOn: 
   - Build_Stage
-  - Release_Stage_UAT
-  condition: in(dependencies.Release_Stage_QA.result, 'Succeeded', 'SucceededWithIssues')
+  - Release_Stage_DEV
+  condition: in(dependencies.Release_Stage_DEV.result, 'Succeeded', 'SucceededWithIssues')
   jobs:
   - job: Deploy_to_PROD
   - template: release-pipeline.yml
