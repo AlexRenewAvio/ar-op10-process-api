@@ -1,0 +1,124 @@
+trigger:
+  branches:
+    include:
+    - develop
+    exclude:
+    - 'refs/tags/*'
+    - 'feature/*'
+pr: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+name: $(Date:yyyyMMdd)$(Rev:rr)
+
+variables:
+- group: pipelineVariables
+
+stages:
+
+- stage: Build_Stage
+  displayName: Build and Publish
+  #condition: always()
+  condition: not(contains(variables['Build.SourceVersionMessage'], '[skip ci/cd]'))
+  variables:
+  - group: munitVariables
+  jobs:   
+  - job: Build_and_Publish  
+    steps:
+    - task: CmdLine@2
+      displayName: 'Show Variable Values'
+      inputs:
+        script: |
+                echo $(jdkVersion)
+                echo $(workerType)
+                echo $(MAVEN_COMMON_OPTIONS)
+                echo $(MAVEN_OPTIONS_WITH_SETTINGS)
+                echo $(MAVEN_BUILD_OPTS)
+    - task: DownloadSecureFile@1
+      name: mavenSettings
+      inputs:
+        secureFile: 'mavenSettings.xml'
+    - task: Maven@3
+      displayName: 'Set Version'
+      #condition: eq(variables['Build.SourceBranch'], variables['developBranch'])
+      inputs:
+        goals: 'build-helper:parse-version versions:set -DnewVersion=${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}-$(Build.BuildNumber) -DprocessAllModules versions:commit'
+        options: $(MAVEN_OPTIONS_WITH_SETTINGS)
+        jdkVersionOption: $(jdkVersion) 
+    - task: PowerShell@2   
+      displayName: 'Init: Parse POM for GAV'
+     # condition: eq(variables['Build.SourceBranch'], variables['developBranch'])
+      inputs:
+        workingDirectory: $(System.DefaultWorkingDirectory)
+        targetType: inline
+        script: |
+                  $project = ([xml](Get-Content -Path pom.xml)).project
+                  $appArtifactId = $project.artifactId
+                  $appGroupId = $project.groupId
+                  $appVersion = $project.version
+                  echo "##vso[build.updatebuildnumber]$appVersion"
+                  echo "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
+                  echo "##vso[task.setvariable variable=appArtifactId;isOutput=true]$appArtifactId"
+                  echo "##vso[task.setvariable variable=appGroupId;isOutput=true]$appGroupId"
+      name: ValidateVar
+    - task: Maven@3
+      displayName: 'Verify'
+      inputs:
+        goals: 'verify'
+        options: $(MAVEN_BUILD_DEPLOY_OPTS)
+        publishJUnitResults: true
+        jdkVersionOption: $(jdkVersion)
+    - task: CopyFiles@2
+      displayName: 'Store Artifact: Copy Jar to: $(build.artifactstagingdirectory)'
+      #condition: eq(variables['Build.SourceBranch'], variables['developBranch'])
+      inputs:
+        SourceFolder: '$(system.defaultworkingdirectory)'
+        Contents: '**/target/*.jar'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+    - task: CopyFiles@2
+      displayName: 'Store Artifact: Copy Pom to: $(build.artifactstagingdirectory)'
+      #condition: eq(variables['Build.SourceBranch'], variables['developBranch'])
+      inputs:
+        SourceFolder: '$(system.defaultworkingdirectory)'
+        Contents: 'pom.xml'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+      #condition: eq(variables['Build.SourceBranch'], variables['developBranch'])
+
+# Stage for Deploying your application to Dev
+- stage: Release_Stage_DEV
+  displayName: Deploy to DEV
+  variables:
+    - group: releaseVariables_DEV
+  dependsOn: 
+  - Build_Stage
+  condition: and(in(dependencies.Build_Stage.result, 'Succeeded', 'SucceededWithIssues'), not(contains(variables['Build.SourceVersionMessage'], '[skip ci/cd]')))
+  jobs:
+  - job: Deploy_to_DEV
+  - template: release-pipeline.yml
+    parameters:
+      environment: DEV
+      appArtifactId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appArtifactId'] ]
+      appVersion: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appVersion'] ]
+      appGroupId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appGroupId'] ]
+      
+# Stage for Deploying your application to Prod
+- stage: Release_Stage_PROD
+  displayName: Deploy to PROD
+  variables:
+    - group: releaseVariables_PROD
+  dependsOn: 
+  - Build_Stage
+  - Release_Stage_DEV
+  condition: in(dependencies.Release_Stage_DEV.result, 'Succeeded', 'SucceededWithIssues')
+  jobs:
+  - job: Deploy_to_PROD
+  - template: release-pipeline.yml
+    parameters:
+      environment: PROD
+      appArtifactId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appArtifactId'] ]
+      appVersion: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appVersion'] ]
+      appGroupId: $[ stageDependencies.Build_Stage.Build_and_Publish.outputs['ValidateVar.appGroupId'] ]
+      
