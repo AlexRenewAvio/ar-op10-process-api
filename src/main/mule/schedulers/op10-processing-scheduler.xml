@@ -10,7 +10,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd">
 	
 	<flow name="op10-scheduler" doc:id="59b4138a-19ba-4fc9-b279-2e916c4e28a9" >
-		<scheduler doc:name="Trigger at 2 AM Everyday" doc:id="7fb6868d-1eec-4fde-acb4-59593b8f4cbe" >
+		<scheduler doc:name="Trigger Schedule" doc:id="7fb6868d-1eec-4fde-acb4-59593b8f4cbe" >
 			<scheduling-strategy >
 				<cron expression="${scheduler.cron}"/>
 			
