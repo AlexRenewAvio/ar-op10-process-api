@@ -7,7 +7,7 @@ fun matrix(value, col, table) =
 	case "Total" -> ("(" ++ col ++ ")")
 }
 var queryColumns = ((vars.configDataTotal filter (split contains $."SCADA Tag") map (matrix($."Query Type" ,$."SCADA Tag", $."SCADA Table") ++ (" " ++ $."SCADA Tag" ++ "__" ++ $."SCADA Column"))) joinBy ",")
-var querySuffix = QueryFrom ++ vars.tableName ++ " where Timestamp >= " ++ "'" ++ vars.updateFrom ++ "'" ++ " and Timestamp < " ++ "'" ++  vars.updateTo ++ " " ++ "01:30:00" ++ "'" ++ " order by TIMESTAMP"
+var querySuffix = QueryFrom ++ vars.tableName ++ " where Timestamp >= " ++ "'" ++ vars.updateFrom ++ "'" ++ " and Timestamp < " ++ "'" ++  vars.updateTo ++ " " ++ p('db.query.updateTo.time') ++ "'" ++ " order by TIMESTAMP"
 output application/json
 ---
 queryPrefix ++ queryColumns ++ querySuffix

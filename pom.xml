@@ -227,12 +227,13 @@
 	</repositories>
 	<pluginRepositories>
 		<!-- comment below for skipping mule linter -->
-		<pluginRepository>
+		<!-- <pluginRepository>
 			<id>github-avio-pkg</id>
 			<name>AVIO Github Package Repository</name>
 			<url>https://maven.pkg.github.com/avioconsulting/public-packages/</url>
 			<layout>default</layout>
 		</pluginRepository>
+		-->
 		<!-- comment above for skipping mule linter -->
 		<pluginRepository>
 			<id>mulesoft-releases</id>
