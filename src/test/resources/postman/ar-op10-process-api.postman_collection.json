@@ -1,0 +1,148 @@
+{
+	"info": {
+		"_postman_id": "ae23fc8f-63a5-4995-8888-13c70ab3f8a2",
+		"name": "ar-op10-process-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3642795"
+	},
+	"item": [
+		{
+			"name": "Retrieve Keys",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://ar-op10-process-api-{{env}}.us-e1.cloudhub.io/api/v1/retrive-all?objectStoreName=dateWatermark",
+					"protocol": "https",
+					"host": [
+						"ar-op10-process-api-{{env}}",
+						"us-e1",
+						"cloudhub",
+						"io"
+					],
+					"path": [
+						"api",
+						"v1",
+						"retrive-all"
+					],
+					"query": [
+						{
+							"key": "objectStoreName",
+							"value": "dateWatermark"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update From Date",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "https://ar-op10-process-api-{{env}}.us-e1.cloudhub.io/api/v1/update-from?objectStoreName=dateWatermark&objectStoreKey=updateFrom&updateFrom=2023-11-01",
+					"protocol": "https",
+					"host": [
+						"ar-op10-process-api-{{env}}",
+						"us-e1",
+						"cloudhub",
+						"io"
+					],
+					"path": [
+						"api",
+						"v1",
+						"update-from"
+					],
+					"query": [
+						{
+							"key": "objectStoreName",
+							"value": "dateWatermark"
+						},
+						{
+							"key": "objectStoreKey",
+							"value": "updateFrom"
+						},
+						{
+							"key": "updateFrom",
+							"value": "2023-11-01"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update To Date",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "https://ar-op10-process-api-{{env}}.us-e1.cloudhub.io/api/v1/update-to?objectStoreName=dateWatermark&objectStoreKey=updateTo&updateTo=2023-11-02",
+					"protocol": "https",
+					"host": [
+						"ar-op10-process-api-{{env}}",
+						"us-e1",
+						"cloudhub",
+						"io"
+					],
+					"path": [
+						"api",
+						"v1",
+						"update-to"
+					],
+					"query": [
+						{
+							"key": "objectStoreName",
+							"value": "dateWatermark"
+						},
+						{
+							"key": "objectStoreKey",
+							"value": "updateTo"
+						},
+						{
+							"key": "updateTo",
+							"value": "2023-11-02"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "{{clientSecret}}",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "{{clientId}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
