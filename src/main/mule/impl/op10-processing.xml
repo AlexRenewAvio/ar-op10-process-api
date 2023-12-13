@@ -91,7 +91,7 @@ http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/
 	</sub-flow>
 	<sub-flow name="smb-connections" doc:id="f4da3e68-b9f3-45cd-a71a-7d0a68ef9833" >
 		<avio-logger:log doc:name="START" doc:id="e8cd6853-5752-481c-889a-d5c4e474e6de" config-ref="avioCoreConfig" message="Sending file to SMB Server location - MulesoftIMPfiles" />
-		<smb:file-write doc:name="Operator10 SMB location" doc:id="946f4f2e-a287-4a98-897f-ed4f5136d7ef" config-ref="SMBConnectorConfig" fileName='#["mulesoft-op10-" ++ vars.updateFrom ++ ".imp"]'/>
+		<smb:file-write doc:name="Operator10 SMB location" doc:id="946f4f2e-a287-4a98-897f-ed4f5136d7ef" config-ref="SMBConnectorConfig" fileName='#["mulesoft-op10-" ++ vars.updateFrom ++ "-" ++ now() as String {format: "y-MM-dd-hhms"} ++ ".imp"]'/>
 		<avio-logger:log doc:name="END" doc:id="e686b345-9486-4909-868f-cc84be37f30b" config-ref="avioCoreConfig" message="File successfully sent to SMBlocation - MulesoftIMPfiles"/>
 	</sub-flow>
 	<sub-flow name="op10-file-format" doc:id="22d208a7-3929-40f5-9dd9-4fb4bb6b9c21">
