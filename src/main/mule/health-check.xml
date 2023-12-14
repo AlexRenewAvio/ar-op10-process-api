@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:module-health-check="http://www.mulesoft.org/schema/mule/module-health-check" xmlns:smb="http://www.mulesoft.org/schema/mule/smb"
+	xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/mule/avio-logger/current/mule-avio-logger.xsd
+http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/current/mule-smb.xsd
+http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/schema/mule/module-health-check/current/mule-module-health-check.xsd">
+	<sub-flow name="db-health-check" doc:id="d0fcb7a8-fc66-4eae-9abc-54611c78c1a0" >
+		<try doc:name="Try" doc:id="c6ef33a6-2aa0-4085-94ac-2c487c870f48" >
+			<ee:transform doc:name="Construct Query" doc:id="bca558e9-f98e-4b5b-a8d2-6052ca7bd432">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+"Select max(S3430010AITX061FR) S3430010AITX061FR__28,avg(S3430010AITX061FR) S3430010AITX061FR__29,avg(S3430020AITX061FR) S3430020AITX061FR__30,max(S3430020AITX061FR) S3430020AITX061FR__31 from dbo.HIST31G_FR where Timestamp >= '2023-12-13' and Timestamp < '2023-12-14'"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<db:select doc:name="Data from Database" doc:id="caae5311-23f9-4c05-9afe-950c725a4982" config-ref="databaseConfig">
+			<db:sql><![CDATA[#[payload]]]></db:sql>
+		</db:select>
+			<set-variable value="OK" doc:name="statusCode" doc:id="5e6c3033-7d01-48fd-85b6-9dc543a46719" variableName="statusCode" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="40f06ab0-933f-4dab-8698-de2cfea002a9" >
+					<avio-logger:log doc:name="Log Error" doc:id="b2b0ff88-00fe-48df-82c9-70ba56e0a8f0" config-ref="avioCoreConfig" level="ERROR" message="Health check could not access DB service"/>
+					<ee:transform doc:name="Vars: statusCode &amp; errorDescription" doc:id="f841722d-8c0a-48c9-be13-2d445bcc6499" >
+						<ee:message >
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="errorDescription" ><![CDATA[%dw 2.0
+output application/java
+---
+error.description]]></ee:set-variable>
+							<ee:set-variable variableName="statusCode" ><![CDATA[%dw 2.0
+output application/java
+---
+'ERROR']]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="83bc2296-96b4-4c12-9135-e3fd19d623d3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+  systemName: 'SQLServer DB',
+  connectionConfig: p('db.asa.name'),
+  user: p('db.asa.username'),
+  status: vars.statusCode,
+  (exception: vars.errorDescription) if (vars.statusCode=="ERROR"),
+  timeStamp : now() as String {format: 'yyyy-MM-dd HH:mm:ss'}
+}  ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="smb-health-check" doc:id="6f2a5f76-260a-404c-a8f4-b62638ba8f24" >
+		<try doc:name="Try" doc:id="5a62e338-eb9d-4a09-8181-b9840102d782" >
+			<smb:file-read doc:name="File Read" doc:id="21406a1c-01d0-48a0-a633-687b39e3e6fa" config-ref="SMBConnectorConfig" fileName='#["mulesoft-op10-2023-12-13-2023-12-14-123416.imp"]' />
+			<set-variable value="OK" doc:name="statusCode" doc:id="a1ae5604-bb3a-4802-b0e1-7798ea3238a2" variableName="statusCode" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5fb85301-66ea-4be3-b589-fe2b7a8ac8a1" >
+					<avio-logger:log doc:name="Log Error" doc:id="0e2e33c6-4a56-401d-aaee-83f49b426bd1" config-ref="avioCoreConfig" message="Health check could not access SMB service">
+			<avio-logger:message-attributes />
+		</avio-logger:log>
+					<ee:transform doc:name="Vars: statusCode &amp; errorDescription" doc:id="a1b76478-ee88-421b-a763-12e7daf551d5" >
+						<ee:message />
+						<ee:variables >
+							<ee:set-variable variableName="errorDescription" ><![CDATA[%dw 2.0
+output application/java
+---
+error.description]]></ee:set-variable>
+							<ee:set-variable variableName="statusCode" ><![CDATA[%dw 2.0
+output application/java
+---
+'ERROR']]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<ee:transform doc:name="Transform Message" doc:id="570042fd-9c5b-489a-8a50-6e81b1e313dd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+  systemName: 'SMB',
+  connectionConfig: p('smb.domain'),
+  user: p('smb.username'),
+  status: vars.statusCode,
+  (exception: vars.errorDescription) if (vars.statusCode=="ERROR"),
+  timeStamp : now() as String {format: 'yyyy-MM-dd HH:mm:ss'}
+}  ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

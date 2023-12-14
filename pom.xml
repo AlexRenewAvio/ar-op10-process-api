@@ -18,6 +18,8 @@
 		<munit.version>2.3.18</munit.version>
 		<tags/>
 		<categories>[]</categories>
+		<avio.health.check.version>3.0.0</avio.health.check.version>
+		<avio.logger.version>2.0.1</avio.logger.version>
 	</properties>
 
 	<build>
@@ -122,13 +124,6 @@
 			<version>1.2.3</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
-
-		<dependency>
-			<groupId>5bdbaced-b1a3-4f07-ac77-8445d7296f32</groupId>
-			<artifactId>mule-custom-logger</artifactId>
-			<version>1.0.0</version>
-			<classifier>mule-plugin</classifier>
-		</dependency>
 		<dependency>
 			<groupId>org.mule.modules</groupId>
 			<artifactId>mule-apikit-module</artifactId>
@@ -201,6 +196,18 @@
 			<groupId>com.mulesoft.connectors</groupId>
 			<artifactId>mule-cloudhub-connector</artifactId>
 			<version>1.1.1</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.avioconsulting.mule</groupId>
+			<artifactId>mule-custom-logger</artifactId>
+			<version>${avio.logger.version}</version>
+			<classifier>mule-plugin</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.avioconsulting.mule</groupId>
+			<artifactId>mule-health-check-api</artifactId>
+			<version>${avio.health.check.version}</version>
 			<classifier>mule-plugin</classifier>
 		</dependency>
 	</dependencies>

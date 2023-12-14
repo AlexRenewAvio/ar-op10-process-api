@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
-	xmlns:smb="http://www.mulesoft.org/schema/mule/smb"
-	 xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
-      xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger"
-      xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:avio-core="http://www.mulesoft.org/schema/mule/avio-core" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+<mule xmlns:module-health-check="http://www.mulesoft.org/schema/mule/module-health-check"
+	xmlns:cloudhub="http://www.mulesoft.org/schema/mule/cloudhub"
+	 xmlns:smb="http://www.mulesoft.org/schema/mule/smb" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+      xmlns:db="http://www.mulesoft.org/schema/mule/db"
+      xmlns:avio-logger="http://www.mulesoft.org/schema/mule/avio-logger" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:avio-core="http://www.mulesoft.org/schema/mule/avio-core" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
@@ -14,7 +14,8 @@ http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
 http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/current/mule-smb.xsd
-http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd">
+http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule/cloudhub/current/mule-cloudhub.xsd
+http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/schema/mule/module-health-check/current/mule-module-health-check.xsd">
 
     <!-- API Kit router -->
     <apikit:config name="op10-process-api-config" api="resource::5bdbaced-b1a3-4f07-ac77-8445d7296f32:alexandria-renew-op10-process-api:1.0.0:raml:zip:op10-process-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
@@ -64,4 +65,5 @@ http://www.mulesoft.org/schema/mule/cloudhub http://www.mulesoft.org/schema/mule
 	<smb:config name="SMBConnectorConfig" doc:name="SMB Connector Config" doc:id="eca41348-f821-495a-beb7-9f0df5e14ddc" >
 		<smb:connection domain="${smb.domain}" host="${smb.host}" share="${smb.share}" username="${smb.username}" password='${secure::smb.password}' fileAge="${smb.fileage}" fileAgeUnit="MINUTES" socketTimeout="30"/>
 	</smb:config>
+	<module-health-check:config name="AVIO_Health_Check_Config" doc:name="AVIO Health Check Config" doc:id="c67c950b-9ffc-45e1-b51d-6b930518e824" logCategory="com.ar.api.health-check.ar-op10-process-api" extSysFlowNames="db-health-check,smb-health-check" />
 </mule>
