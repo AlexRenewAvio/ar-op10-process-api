@@ -66,4 +66,8 @@ http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/
 		<smb:connection domain="${smb.domain}" host="${smb.host}" share="${smb.share}" username="${smb.username}" password='${secure::smb.password}' fileAge="${smb.fileage}" fileAgeUnit="MINUTES" socketTimeout="30"/>
 	</smb:config>
 	<module-health-check:config name="AVIO_Health_Check_Config" doc:name="AVIO Health Check Config" doc:id="c67c950b-9ffc-45e1-b51d-6b930518e824" logCategory="com.ar.api.health-check.ar-op10-process-api" extSysFlowNames="db-health-check,smb-health-check" />
+	<http:listener-config name="httpListenerConfigArOp10HC" doc:name="HTTP Listener config" doc:id="79dfbaf8-5139-4c22-b067-471bf7d8c665">
+		<http:listener-connection host="0.0.0.0" port="${https.private.port}" protocol="HTTPS" tlsContext="tlsContextListener"/>
+	</http:listener-config>
+
 </mule>
