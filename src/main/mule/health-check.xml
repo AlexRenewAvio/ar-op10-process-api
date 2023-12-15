@@ -10,16 +10,8 @@ http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/
 http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/schema/mule/module-health-check/current/mule-module-health-check.xsd">
 	<sub-flow name="db-health-check" doc:id="d0fcb7a8-fc66-4eae-9abc-54611c78c1a0" >
 		<try doc:name="Try" doc:id="c6ef33a6-2aa0-4085-94ac-2c487c870f48" >
-			<ee:transform doc:name="Construct Query" doc:id="bca558e9-f98e-4b5b-a8d2-6052ca7bd432">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/java
----
-"Select max(S3430010AITX061FR) S3430010AITX061FR__28,avg(S3430010AITX061FR) S3430010AITX061FR__29,avg(S3430020AITX061FR) S3430020AITX061FR__30,max(S3430020AITX061FR) S3430020AITX061FR__31 from dbo.HIST31G_FR where Timestamp >= '2023-12-13' and Timestamp < '2023-12-14'"]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
 			<db:select doc:name="Data from Database" doc:id="caae5311-23f9-4c05-9afe-950c725a4982" config-ref="databaseConfig">
-			<db:sql><![CDATA[#[payload]]]></db:sql>
+			<db:sql><![CDATA[#["SELECT 1"]]]></db:sql>
 		</db:select>
 			<set-variable value="OK" doc:name="statusCode" doc:id="5e6c3033-7d01-48fd-85b6-9dc543a46719" variableName="statusCode" />
 			<error-handler >
@@ -60,7 +52,7 @@ output application/java
 	</sub-flow>
 	<sub-flow name="smb-health-check" doc:id="6f2a5f76-260a-404c-a8f4-b62638ba8f24" >
 		<try doc:name="Try" doc:id="5a62e338-eb9d-4a09-8181-b9840102d782" >
-			<smb:file-read doc:name="File Read" doc:id="21406a1c-01d0-48a0-a633-687b39e3e6fa" config-ref="SMBConnectorConfig" fileName='#["mulesoft-op10-2023-12-13-2023-12-14-123416.imp"]' />
+			<smb:directory-list doc:name="Directory List" doc:id="e6ad75a0-9f44-4703-92b3-6643a6033ba2" config-ref="SMBConnectorConfig" dirName="${smb.share}"/>
 			<set-variable value="OK" doc:name="statusCode" doc:id="a1ae5604-bb3a-4802-b0e1-7798ea3238a2" variableName="statusCode" />
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5fb85301-66ea-4be3-b589-fe2b7a8ac8a1" >
