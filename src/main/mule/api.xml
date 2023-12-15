@@ -5,6 +5,9 @@ http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/
     <http:listener-config name="HTTP_Listener_config_remove" doc:name="HTTP Listener config" doc:id="a89895a1-8bca-4bf5-9c14-37c9e4b7b044" >
 		<http:listener-connection host="0.0.0.0" port="8081" />
 	</http:listener-config>
+	<http:listener-config name="httpListenerConfigArOp10HC" doc:name="HTTP Listener config" doc:id="79dfbaf8-5139-4c22-b067-471bf7d8c665">
+		<http:listener-connection host="0.0.0.0" port="${https.private.port}"/>
+	</http:listener-config>
 	<flow name="op10-process-api-main">
         <http:listener config-ref="httpListenerConfigArOp10ProcessApi" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -29,7 +32,17 @@ http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/
 		<flow-ref doc:name="set-update-to-date" doc:id="24b65eb1-e022-4714-a4a9-c0975c51b092" name="set-update-to-date"/>
     </flow>
 	<flow name="apiFlow" doc:id="edbf22c6-0457-4a50-b5ae-2e62d93bcfe7" >
-		<http:listener doc:name="Listener" doc:id="79dfbaf8-5139-4c22-b067-471bf7d8c665" config-ref="httpListenerConfigArOp10ProcessApi" path="/monitor/*"/>
+		<http:listener doc:name="Listener" doc:id="79dfbaf8-5139-4c22-b067-471bf7d8c665" config-ref="httpListenerConfigArOp10HC" path="/monitor/*">
+			<http:response statusCode="#[vars.statusCode]" />
+		</http:listener>
 		<module-health-check:health-check doc:id="907f4b09-fc93-4d07-a256-82ca40b697e4" config-ref="AVIO_Health_Check_Config"/>
+		<choice doc:name="Choice" doc:id="0b98e6b8-e23b-439a-afb9-15c7dbc662d5" >
+			<when expression="#[(payload.systems[0].status == 'ERROR') or (payload.systems[1].status  == 'ERROR')]">
+				<set-variable value="500" doc:name="Set Variable" doc:id="3249382c-31e1-4b61-b546-c1aff5d80434" variableName="statusCode"/>
+			</when>
+			<otherwise >
+				<set-variable value="200" doc:name="Set Variable" doc:id="934b7bdf-0ead-4394-8780-a604625083db" variableName="statusCode"/>
+			</otherwise>
+		</choice>
 	</flow>
 </mule>

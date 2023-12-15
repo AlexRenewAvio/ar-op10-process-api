@@ -13,11 +13,11 @@ http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/
 			<db:select doc:name="Data from Database" doc:id="caae5311-23f9-4c05-9afe-950c725a4982" config-ref="databaseConfig">
 			<db:sql><![CDATA[#["SELECT 1"]]]></db:sql>
 		</db:select>
-			<set-variable value="OK" doc:name="statusCode" doc:id="5e6c3033-7d01-48fd-85b6-9dc543a46719" variableName="statusCode" />
+			<set-variable value="OK" doc:name="statusCode" doc:id="5e6c3033-7d01-48fd-85b6-9dc543a46719" variableName="status" />
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="40f06ab0-933f-4dab-8698-de2cfea002a9" >
 					<avio-logger:log doc:name="Log Error" doc:id="b2b0ff88-00fe-48df-82c9-70ba56e0a8f0" config-ref="avioCoreConfig" level="ERROR" message="Health check could not access DB service"/>
-					<ee:transform doc:name="Vars: statusCode &amp; errorDescription" doc:id="f841722d-8c0a-48c9-be13-2d445bcc6499" >
+					<ee:transform doc:name="Vars: status &amp; errorDescription" doc:id="f841722d-8c0a-48c9-be13-2d445bcc6499" >
 						<ee:message >
 						</ee:message>
 						<ee:variables >
@@ -25,7 +25,7 @@ http://www.mulesoft.org/schema/mule/module-health-check http://www.mulesoft.org/
 output application/java
 ---
 error.description]]></ee:set-variable>
-							<ee:set-variable variableName="statusCode" ><![CDATA[%dw 2.0
+							<ee:set-variable variableName="status" ><![CDATA[%dw 2.0
 output application/java
 ---
 'ERROR']]></ee:set-variable>
@@ -43,8 +43,8 @@ output application/java
   systemName: 'SQLServer DB',
   connectionConfig: p('db.asa.name'),
   user: p('db.asa.username'),
-  status: vars.statusCode,
-  (exception: vars.errorDescription) if (vars.statusCode=="ERROR"),
+  status: vars.status,
+  (exception: vars.errorDescription) if (vars.status=="ERROR"),
   timeStamp : now() as String {format: 'yyyy-MM-dd HH:mm:ss'}
 }  ]]></ee:set-payload>
 			</ee:message>
@@ -53,20 +53,20 @@ output application/java
 	<sub-flow name="smb-health-check" doc:id="6f2a5f76-260a-404c-a8f4-b62638ba8f24" >
 		<try doc:name="Try" doc:id="5a62e338-eb9d-4a09-8181-b9840102d782" >
 			<smb:directory-list doc:name="Directory List" doc:id="e6ad75a0-9f44-4703-92b3-6643a6033ba2" config-ref="SMBConnectorConfig" dirName="${smb.share}"/>
-			<set-variable value="OK" doc:name="statusCode" doc:id="a1ae5604-bb3a-4802-b0e1-7798ea3238a2" variableName="statusCode" />
+			<set-variable value="OK" doc:name="statusCode" doc:id="a1ae5604-bb3a-4802-b0e1-7798ea3238a2" variableName="status" />
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5fb85301-66ea-4be3-b589-fe2b7a8ac8a1" >
 					<avio-logger:log doc:name="Log Error" doc:id="0e2e33c6-4a56-401d-aaee-83f49b426bd1" config-ref="avioCoreConfig" message="Health check could not access SMB service">
 			<avio-logger:message-attributes />
 		</avio-logger:log>
-					<ee:transform doc:name="Vars: statusCode &amp; errorDescription" doc:id="a1b76478-ee88-421b-a763-12e7daf551d5" >
+					<ee:transform doc:name="Vars: status &amp; errorDescription" doc:id="a1b76478-ee88-421b-a763-12e7daf551d5" >
 						<ee:message />
 						<ee:variables >
 							<ee:set-variable variableName="errorDescription" ><![CDATA[%dw 2.0
 output application/java
 ---
 error.description]]></ee:set-variable>
-							<ee:set-variable variableName="statusCode" ><![CDATA[%dw 2.0
+							<ee:set-variable variableName="status" ><![CDATA[%dw 2.0
 output application/java
 ---
 'ERROR']]></ee:set-variable>
@@ -84,7 +84,7 @@ output application/java
   systemName: 'SMB',
   connectionConfig: p('smb.domain'),
   user: p('smb.username'),
-  status: vars.statusCode,
+  status: vars.status,
   (exception: vars.errorDescription) if (vars.statusCode=="ERROR"),
   timeStamp : now() as String {format: 'yyyy-MM-dd HH:mm:ss'}
 }  ]]></ee:set-payload>
