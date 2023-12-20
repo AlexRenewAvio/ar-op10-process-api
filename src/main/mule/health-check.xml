@@ -52,7 +52,7 @@ output application/java
 	</sub-flow>
 	<sub-flow name="smb-health-check" doc:id="6f2a5f76-260a-404c-a8f4-b62638ba8f24" >
 		<try doc:name="Try" doc:id="5a62e338-eb9d-4a09-8181-b9840102d782" >
-			<smb:directory-list doc:name="Directory List" doc:id="e6ad75a0-9f44-4703-92b3-6643a6033ba2" config-ref="SMBConnectorConfig" dirName="${smb.share}"/>
+			<smb:directory-list doc:name="Directory List" doc:id="e6ad75a0-9f44-4703-92b3-6643a6033ba2" config-ref="SMBConnectorConfig"/>
 			<set-variable value="OK" doc:name="statusCode" doc:id="a1ae5604-bb3a-4802-b0e1-7798ea3238a2" variableName="status" />
 			<error-handler >
 				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5fb85301-66ea-4be3-b589-fe2b7a8ac8a1" >
