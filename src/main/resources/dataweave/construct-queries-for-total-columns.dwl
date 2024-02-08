@@ -1,6 +1,6 @@
 %dw 2.0
 var split = payload.tableValues splitBy ","
-var queryPrefix = "Select TIMESTAMP,"
+var queryPrefix = "Select TIMESTAMP,DATETIME, "
 var QueryFrom = " from dbo."
 fun matrix(value, col, table) =
   value match {
