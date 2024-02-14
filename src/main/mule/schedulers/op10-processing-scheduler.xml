@@ -13,7 +13,6 @@ http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/m
 		<scheduler doc:name="Trigger Schedule" doc:id="7fb6868d-1eec-4fde-acb4-59593b8f4cbe" >
 			<scheduling-strategy >
 				<cron expression="${scheduler.cron}" timeZone="${scheduler.timezone}"/>
-			
 </scheduling-strategy>
 		</scheduler>
 		<avio-logger:log doc:name="START" doc:id="ebf0fe41-2f6d-4d44-b405-f7ae9c828faa" config-ref="avioCoreConfig" message="Application Scheduler Started">
