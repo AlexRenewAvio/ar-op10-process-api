@@ -14,13 +14,30 @@ http://www.mulesoft.org/schema/mule/avio-logger http://www.mulesoft.org/schema/m
 http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/current/mule-smb.xsd">
 	<flow name="op10-processing-impl" doc:id="898dd829-1f03-47c5-a388-fd8c93ebef48">
 		<avio-logger:log doc:name="START" doc:id="1205e2a4-0dec-4cd4-bdfb-6fe8ba952551" config-ref="avioCoreConfig" message="Start of op10 file creation" />
+		<set-variable value='#[now() as String {format: "y-MM-dd-hhms"}]' doc:name="startTime of processing" doc:id="b94427b8-ea72-48fb-8cd6-be7586f070a7" variableName="startTime"/>
 		<flow-ref doc:name="set-dates" doc:id="c3576891-a3bd-4396-87c6-458a3e86677a" name="set-dates" />
 		<flow-ref doc:name="extract-and-sort-tables" doc:id="a5d8667e-bbb0-4016-afa6-0050c19143ca" name="extract-and-sort-tables" />
 		<flow-ref doc:name="extract-min-max-avg-records" doc:id="e4dafe46-4730-4d55-9866-c1289bfce681" name="extract-min-max-avg-records" />
 		<flow-ref doc:name="extract-total-records" doc:id="3127d1f7-8a6e-4773-885e-0f048de61598" name="extract-total-records" />
+		<ee:transform doc:name="Total of records/errors" doc:id="88203070-96e7-4b94-8c41-31c4edbc1365" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="recordsTotal" ><![CDATA[%dw 2.0
+output application/json
+---
+sizeOf(vars.minMaxAvgRecordsOutputFile) as Number + sizeOf(vars.totalRecordsOutputFile) as Number]]></ee:set-variable>
+				<ee:set-variable variableName="errorsTotal" ><![CDATA[%dw 2.0
+output application/json
+---
+sizeOf(vars.minMaxAvgErrorResponse) as Number + sizeOf(vars.totalRecordsErrorResponse) as Number]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
 		<flow-ref doc:name="op10-file-format" doc:id="b7919153-782d-4cbf-8d03-3cae3b844691" name="op10-file-format" />
 		<flow-ref doc:name="smb-connections" doc:id="821172ec-8305-42b7-86a0-56fe57c083f8" name="smb-connections" />
 		<flow-ref doc:name="op10-error-list" doc:id="157e2b07-7524-4779-b911-9bde05977ed2" name="op10-error-list" />
+		<set-variable value='#[now() as String {format: "y-MM-dd-hhms"}]' doc:name="endTime of processing" doc:id="6ce9781c-b20d-472d-88cd-e98e7f890498" variableName="endTime"/>
+		<!--flow-ref doc:name="errors-report" doc:id="dbdfb616-ecf4-4e9f-9afc-36881300a05c" name="errors-report-sending"/-->
 		<avio-logger:log doc:name="END" doc:id="44b4cbc9-e283-4fd4-bc01-fed212ebf0a5" config-ref="avioCoreConfig" message="End of op10 file creation" />
 		<error-handler ref="globalErrorHandler" />
 	
@@ -61,6 +78,20 @@ http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/
 				<ee:set-variable resource="dataweave/list-of-total-columns-queries.dwl" variableName="listOfTotalQueries" />
 			</ee:variables>
 		</ee:transform>
+		<ee:transform doc:name="Tables" doc:id="b4568059-08c5-4465-a9ff-860b173547b6" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="tablesTotal" ><![CDATA[%dw 2.0
+output application/java
+---
+sizeOf(vars.listOfTotalQueries) as Number + sizeOf(vars.listOfMaxMinAvgQueries) as Number]]></ee:set-variable>
+				<ee:set-variable variableName="errorTables" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
 	</sub-flow>
 	<sub-flow name="database-connections" doc:id="327cc97f-a407-441d-921e-8fae6e6b4f69" >
 		<avio-logger:log doc:name="START" doc:id="14cb0332-fd30-41dd-87d8-3edccb1ab961" config-ref="avioCoreConfig" message='#["Start Data Pull from Table: " ++ vars.tableName default "Error: Table Not found"]' />
@@ -76,6 +107,7 @@ http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/
 					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="61fd6289-f7c7-403f-b937-5a662b315b10" type="ANY">
 						<avio-logger:log doc:name="ERROR" doc:id="4e922b4c-5e2c-4258-a420-27b549fa7519" config-ref="avioCoreConfig" message="Permenant error occured" level="ERROR"/>
 						<set-variable value="#[error.description]" doc:name="Set Error Msg" doc:id="17672cff-840f-4cf1-866c-9a0396b464f0" variableName="errorMsg"/>
+						<set-variable value='#[{&#10;	"table": vars.tableName,&#10;	"error": vars.errorMsg default "Unknown error"&#10;}]' doc:name="Set Error Msg by Table" doc:id="ce60edde-85ea-4bb0-9181-3d115ba50e74" variableName="errorTables" />
 					</on-error-continue>
 						</error-handler>
 					</try>
@@ -91,7 +123,8 @@ http://www.mulesoft.org/schema/mule/smb http://www.mulesoft.org/schema/mule/smb/
 	</sub-flow>
 	<sub-flow name="smb-connections" doc:id="f4da3e68-b9f3-45cd-a71a-7d0a68ef9833" >
 		<avio-logger:log doc:name="START" doc:id="e8cd6853-5752-481c-889a-d5c4e474e6de" config-ref="avioCoreConfig" message="Sending file to SMB Server location - MulesoftIMPfiles" />
-		<smb:file-write doc:name="Operator10 SMB location" doc:id="946f4f2e-a287-4a98-897f-ed4f5136d7ef" config-ref="SMBConnectorConfig" fileName='#["mulesoft-op10-" ++ vars.updateFrom ++ "-" ++ now() as String {format: "y-MM-dd-hhms"} ++ ".imp"]'/>
+		<set-variable value='#["mulesoft-op10-" ++ vars.updateFrom ++ "-" ++ now() as String {format: "y-MM-dd-hhms"} ++ ".imp"]' doc:name="Set File Name" doc:id="b06c1d7d-b5c6-419e-967a-f91efa41aec2" variableName="fileName"/>
+		<smb:file-write doc:name="Operator10 SMB location" doc:id="946f4f2e-a287-4a98-897f-ed4f5136d7ef" config-ref="SMBConnectorConfig" fileName='#[vars.fileName]'/>
 		<avio-logger:log doc:name="END" doc:id="e686b345-9486-4909-868f-cc84be37f30b" config-ref="avioCoreConfig" message="File successfully sent to SMBlocation - MulesoftIMPfiles"/>
 	</sub-flow>
 	<sub-flow name="op10-file-format" doc:id="22d208a7-3929-40f5-9dd9-4fb4bb6b9c21">
@@ -103,6 +136,7 @@ output application/csv separator="\t", header=false
 (vars.minMaxAvgRecordsOutputFile default []) ++ (vars.totalRecordsOutputFile default [])]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<set-variable value="#[%dw 2.0&#10;output text/plain&#10;var content = write(payload, 'application/json', {indent:true})&#10;var size = sizeOf(content)/1024&#10;---&#10;size as String {format: '#.00'} ++ ' KB']" doc:name="Set File Size" doc:id="63d0a809-0e8d-4e20-928a-bcbae42c8bb3" variableName="bytesFile"/>
 		<avio-logger:log doc:name="DEBUG" doc:id="6d35922f-e46f-4e1e-bca4-d7db41c1d0bf" config-ref="avioCoreConfig" payload='#[write(payload,"application/csv", {"header":false})]' message="Full Import file data for op10" />
 	</sub-flow>
 	<sub-flow name="op10-error-list" doc:id="0734b7f5-5938-4875-8e6c-b8cdce101b17">
@@ -244,12 +278,171 @@ output application/json
 						<ee:message>
 						</ee:message>
 			<ee:variables >
-				<ee:set-variable resource="dataweave/total-records-error-response.dwl" variableName="totalRecordsErrorResponse" />
 				<ee:set-variable resource="dataweave/total-records-output-file.dwl" variableName="totalRecordsOutputFile" />
+				<ee:set-variable resource="dataweave/total-records-error-response.dwl" variableName="totalRecordsErrorResponse" />
 			</ee:variables>
 					</ee:transform>
 		<avio-logger:log doc:name="SUCCESS" doc:id="e677ef59-4fd4-42dc-945e-97599ff04702" config-ref="avioCoreConfig" message="List of Total Records success Response" payload='#[write(vars.totalRecordsOutputFile,"application/csv", {"header":false})]'/>
 		<avio-logger:log doc:name="ERROR" doc:id="a1f73e49-359c-4bdd-af9f-4186ebf5bf25" config-ref="avioCoreConfig" payload='#[write(vars.totalRecordsErrorResponse,"application/json")]' message="List of Total Records Error Response"/>
 		<avio-logger:log doc:name="END" doc:id="b7482b82-8055-4241-9445-33bdc70bb533" config-ref="avioCoreConfig" message="Total Valued Records processing completed"/>
 	</flow>
+	<sub-flow name="errors-report-sending" doc:id="dd7ec915-a331-459d-bd54-61cdedd235ca" >
+		<ee:transform doc:name="Transform Message" doc:id="221be2ed-7d3f-4be1-8587-1590cfccde48" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+if(vars.minMaxAvgErrorResponse == null and vars.totalRecordsErrorResponse == null)
+"{
+	SUCCESS: OP-10 processing successfully completed,
+	Summary: {
+		Total Tables: " ++ vars.tablesTotal ++ ",
+		UpdateFrom: " ++ vars.updateFrom ++ ",
+		UpdateTo: " ++ vars.updateTo ++ ",
+		StartTime: " ++ vars.startTime ++ ",
+		EndTime: " ++ vars.endTime ++ ",
+	},
+	File Details: {
+		Name: " ++ vars.fileName ++ ",
+		Rows: " ++ vars.recordsTotal ++ ",
+		Size: " ++ vars.bytesFile ++ "
+	}
+}"
+else
+"{
+	ERROR: OP-10 processing failed,
+	Summary: {
+		Total Tables: " ++ vars.tablesTotal ++ ",
+		Total Errors: " ++ vars.errorsTotal ++ ",
+		UpdateFrom: " ++ vars.updateFrom ++ ",
+		UpdateTo: " ++ vars.updateTo ++ ",
+		StartTime: " ++ vars.startTime ++ ",
+		EndTime: " ++ vars.endTime ++ ",
+	}
+	Tables With Errors: " ++ vars.errorTables.table map ($) joinBy "," ++ ",
+	File Details: {
+		Name: " ++ vars.fileName ++ ",
+		Rows: " ++ vars.recordsTotal ++ ",
+		Size: " ++ vars.bytesFile ++ "
+	},
+	Details: {
+		" ++ vars.errorTables ++ "
+	}
+}"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<avio-logger:log doc:name="Log" doc:id="cb26e33a-b8bc-4725-aab1-4146d8b9dd4e" config-ref="avioCoreConfig" message="Processing final report" payload='#[write(payload,"application/json")]'/>
+		<ee:transform doc:name="HTLM body to send email" doc:id="e7599884-8112-4469-9313-23666a93d0d8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+if(vars.minMaxAvgErrorResponse == null and vars.totalRecordsErrorResponse == null)
+"<html>
+	<body>
+	<br>
+	<br>
+	<h1>SUCCESS: OP-10 processing successfully completed</h1>
+	<br>
+	<h3>Summary</h3>
+	<br>
+	<p><b>Total Tables</b>" ++ vars.tablesTotal ++ "</p>
+	<table border=" ++ 1 ++ ">
+		<tr>
+			<td><b>Update From</b></td>
+			<td>" ++ vars.updateFrom ++ "</td>
+			<td><b>Update To</b></td>
+			<td>" ++ vars.updateTo ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Start Time</b></td>
+			<td>" ++ vars.startTime ++ "</td>
+			<td><b>End Time</b></td>
+			<td>" ++ vars.endTime ++ "</td>
+		</tr>
+	</table>
+	<br>
+	<h3>File Details</h4>
+	<br>
+	<table border=" ++ 1 ++ ">
+		<tr>
+			<td><b>Name</b></td>
+			<td>" ++ vars.fileName ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Rows</b></td>
+			<td>" ++ vars.recordsTotal ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Size</b></td>
+			<td>" ++ vars.bytesFile ++ "</td>
+		</tr>
+	</table>
+</body>
+</html>"
+else
+"<html>
+	<body>
+	<br>
+	<br>
+	<h1>ERROR: OP-10 processing failed</h1>
+	<br>
+	<h3>Summary</h3>
+	<br>
+	<table border=" ++ 1 ++ ">
+		<tr>
+			<td><b>Total Tables</b></td>
+			<td>" ++ vars.tablesTotal ++ "</td>
+			<td><b>Total Errors</b></td>
+			<td>" ++ vars.errorsTotal ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Update From</b></td>
+			<td>" ++ vars.updateFrom ++ "</td>
+			<td><b>Update To</b></td>
+			<td>" ++ vars.updateTo ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Start Time</b></td>
+			<td>" ++ vars.startTime ++ "</td>
+			<td><b>End Time</b></td>
+			<td>" ++ vars.endTime ++ "</td>
+		</tr>
+	</table>
+	<br>
+	<h4>Tables With Error</h4>
+	<p>" ++ vars.errorTables.table map ($) joinBy "," ++ "</p>
+	<br>
+	<h3>File Details</h4>
+	<br>
+	<table border=" ++ 1 ++ ">
+		<tr>
+			<td><b>Name</b></td>
+			<td>" ++ vars.fileName ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Rows</b></td>
+			<td>" ++ vars.recordsTotal ++ "</td>
+		</tr>
+		<tr>
+			<td><b>Size</b></td>
+			<td>" ++ vars.bytesFile ++ "</td>
+		</tr>
+	</table>
+	<br>
+	<h3>Details</h3>
+	<br>
+	<table border="++ 1 ++">
+		<tr>
+			<td><b>Table</b></td>
+			<td><b>Error</b></td>
+		</tr>
+		" ++ (payload map (tx, index) -> "<tr><td>" ++ tx.table ++ "</td>" ++ "<td>" ++ tx.error ++ "</td></tr>") joinBy "" ++ "
+	</table>
+</body>
+</html>"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+
 </mule>
