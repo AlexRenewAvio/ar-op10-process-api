@@ -37,7 +37,7 @@ sizeOf(vars.minMaxAvgErrorResponse) as Number + sizeOf(vars.totalRecordsErrorRes
 		<flow-ref doc:name="smb-connections" doc:id="821172ec-8305-42b7-86a0-56fe57c083f8" name="smb-connections" />
 		<flow-ref doc:name="op10-error-list" doc:id="157e2b07-7524-4779-b911-9bde05977ed2" name="op10-error-list" />
 		<set-variable value='#[now() as String {format: "y-MM-dd-hhms"}]' doc:name="endTime of processing" doc:id="6ce9781c-b20d-472d-88cd-e98e7f890498" variableName="endTime"/>
-		<!--flow-ref doc:name="errors-report" doc:id="dbdfb616-ecf4-4e9f-9afc-36881300a05c" name="errors-report-sending"/-->
+		<flow-ref doc:name="errors-report" doc:id="dbdfb616-ecf4-4e9f-9afc-36881300a05c" name="errors-report-sending"/>
 		<avio-logger:log doc:name="END" doc:id="44b4cbc9-e283-4fd4-bc01-fed212ebf0a5" config-ref="avioCoreConfig" message="End of op10 file creation" />
 		<error-handler ref="globalErrorHandler" />
 	
